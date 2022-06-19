@@ -20,6 +20,8 @@ import net.glxn.qrgen.android.QRCode
 // Using this library: https://github.com/kenglxn/QRGen for QR code generation
 //  as suggested by this Stack Overflow answer: https://stackoverflow.com/a/33727872
 
+// Using this library: https://github.com/zxing/zxing for QR code scanning
+
 fun generateQrBitmapFromString( str : String ) : Bitmap {
     return QRCode.from( str ).bitmap()
 }
