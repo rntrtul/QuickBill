@@ -30,7 +30,7 @@ fun createDebugPopupAndShow( context : Context, view : View) {
     // Code taken (and modified) from here: https://stackoverflow.com/a/24946375
     val builder = Dialog( context )
     builder.requestWindowFeature(Window.FEATURE_NO_TITLE)
-    builder.getWindow()?.setBackgroundDrawable(
+    builder.window?.setBackgroundDrawable(
         ColorDrawable(Color.TRANSPARENT)
     )
     builder.setOnDismissListener {
