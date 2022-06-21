@@ -1,13 +1,15 @@
 package com.example.quickbill
 
+import SQLiteManager
 import android.os.Bundle
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.quickbill.databinding.ActivityMainBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,5 +30,18 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications))
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        loadFromDBToMemory();
+    }
+
+    private fun loadFromDBToMemory() {
+        println("Anudeep- entered loadFromDBToMemeory")
+        val sqLiteManager = SQLiteManager.instanceOfDatabase(this)
+        val order = Order(1,"title","description", )
+        sqLiteManager!!.addNoteToDatabase(order)
+        sqLiteManager.populateNoteListArray()
+        for (element in Order.noteArrayList) {
+            println("Anudeep: $element")
+        }
     }
 }
