@@ -15,11 +15,27 @@
         android:id="@+id/navigation_pay"
         android:name="com.example.quickbill.ui.pay.PayFragment"
         android:label="@string/title_pay"
-        tools:layout="@layout/fragment_pay" />
+        tools:layout="@layout/fragment_pay" >
+        <action
+            android:id="@+id/action_navigation_pay_to_billFragment"
+            app:destination="@id/billFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_settings"
         android:name="com.example.quickbill.ui.settings.SettingsFragment"
         android:label="@string/title_settings"
         tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/billFragment"
+        android:name="com.example.quickbill.ui.pay.BillFragment"
+        android:label="fragment_bill_list"
+        tools:layout="@layout/fragment_bill_list" >
+        <argument
+            android:name="location_id"
+            app:argType="string" />
+        <argument
+            android:name="table_number"
+            app:argType="integer" />
+    </fragment>
 </navigation>
