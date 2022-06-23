@@ -10,9 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,12 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
  * A fragment representing a list of Items.
  */
 class BillFragment : Fragment() {
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -34,25 +31,25 @@ class BillFragment : Fragment() {
         val locationId = requireArguments().get("location_id")
         val tableNumber = requireArguments().get("table_number")
 
-
         return ComposeView(requireContext()).apply {
             setContent {
-                val orderList = remember { getOrderItems().toMutableList() }
-                val totalCost: MutableState<Double> = remember { mutableStateOf(0.0) }
+                val billViewModel: BillViewModel = viewModel()
 
                 Column {
                     Text(text = "table #$tableNumber at restaurant $locationId")
-                    Text(text = "Pay $${totalCost.value}")
+                    Text(text = "Pay $${billViewModel.totalCost}")
                     Box(
                         Modifier
                             .fillMaxWidth()
                     ) {
                         BillList(
-                            orderList
-                        ) { item, selected ->
-                            if (selected) totalCost.value += item.cost
-                            else totalCost.value -= item.cost
-                        }
+                            billViewModel.items,
+                            onSelectItem = { item, selected ->
+                                billViewModel.itemSelected(
+                                    item,
+                                    selected
+                                )
+                            })
                     }
                 }
             }
@@ -63,17 +60,31 @@ class BillFragment : Fragment() {
 data class OrderItem(
     val name: String,
     val cost: Double,
-    val alreadyPayed: Boolean,
+    val alreadyPayed: Boolean = false,
+    var selected: Boolean = false
 )
+
+@Composable
+fun BillList(
+    list: List<OrderItem>, onSelectItem: (OrderItem, Boolean) -> Unit
+) {
+    Column(
+        Modifier.verticalScroll(
+            rememberScrollState()
+        )
+    ) {
+        for (item in list) {
+            BillItem(item, onSelectItem)
+        }
+    }
+}
 
 @Composable
 fun BillItem(
     item: OrderItem,
-    enabled: Boolean = true,
     onSelectItem: (OrderItem, Boolean) -> Unit
 ) {
-    val isChecked = remember { mutableStateOf(false) }
-    val textColor: Color = if (enabled) Color.Black else Color.LightGray
+    val textColor: Color = if (item.alreadyPayed) Color.LightGray else Color.Black
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -87,12 +98,9 @@ fun BillItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Checkbox(
-                checked = isChecked.value,
-                onCheckedChange = {
-                    isChecked.value = !isChecked.value
-                    onSelectItem(item, isChecked.value)
-                },
-                enabled = enabled
+                checked = item.selected,
+                onCheckedChange = { onSelectItem(item, it) },
+                enabled = !(item.alreadyPayed)
             )
             Text(
                 text = item.name,
@@ -107,23 +115,4 @@ fun BillItem(
             modifier = Modifier.padding(end = 8.dp),
         )
     }
-}
-
-@Composable
-fun BillList(
-    list: List<OrderItem>, onSelectItem: (OrderItem, Boolean) -> Unit
-) {
-    Column(
-        Modifier.verticalScroll(
-            rememberScrollState()
-        )
-    ) {
-        for (item in list) {
-            BillItem(item, onSelectItem = onSelectItem)
-        }
-    }
-}
-
-private fun getOrderItems() = List(15) { i ->
-    OrderItem("$i", i.toDouble(), true)
 }

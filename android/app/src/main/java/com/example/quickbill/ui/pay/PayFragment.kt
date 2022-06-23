@@ -28,7 +28,8 @@ class PayFragment : Fragment() {
                     // fixme: use inside code to transition to bill screen and populate bundle
                     Button(
                         onClick = {
-                            val bundle = bundleOf("location_id" to "deadbeef", "table_number" to 0)
+                            val bundle =
+                                bundleOf("location_id" to "deadbeef", "table_number" to 0)
                             Navigation.findNavController(view)
                                 .navigate(R.id.action_navigation_pay_to_billFragment, bundle)
                         }) {
