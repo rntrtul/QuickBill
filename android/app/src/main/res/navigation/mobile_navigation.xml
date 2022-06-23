@@ -29,8 +29,8 @@
     <fragment
         android:id="@+id/billFragment"
         android:name="com.example.quickbill.ui.pay.BillFragment"
-        android:label="fragment_bill_list"
-        tools:layout="@layout/fragment_bill_list" >
+        android:label="@string/title_bill"
+        tools:layout="@layout/fragment_bill_list">
         <argument
             android:name="location_id"
             app:argType="string" />
