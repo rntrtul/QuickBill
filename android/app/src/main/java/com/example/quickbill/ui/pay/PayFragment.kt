@@ -7,9 +7,12 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.Navigation
 import com.example.quickbill.R
 
@@ -22,9 +25,12 @@ class PayFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
+                val payViewModel: PayViewModel = viewModel()
+                val text by payViewModel.text.observeAsState()
+
                 val view = this
                 Column {
-                    Text(text = "This is the pay fragment")
+                    text?.let { Text(text = it) }
                     // fixme: use inside code to transition to bill screen and populate bundle
                     Button(
                         onClick = {
