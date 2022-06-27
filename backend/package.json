@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only src"
+    "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only src",
+    "prod": "NODE_ENV=production pm2 start src/index.ts --name 'quickbill'"
   },
   "author": "",
   "license": "ISC",

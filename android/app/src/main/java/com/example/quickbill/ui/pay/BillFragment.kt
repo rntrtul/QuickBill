@@ -24,6 +24,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.Navigation
 import com.example.quickbill.R
+import java.time.temporal.TemporalAmount
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * A fragment representing a list of Items.
@@ -66,9 +69,24 @@ class BillFragment : Fragment() {
     }
 }
 
+data class Bill(
+    val id: String,
+    val locationId: String,
+    val lineItems: ArrayList<OrderItem>,
+    val totalMoney: Money
+)
+
+
+data class Money(
+    val amount: String,
+    val currency: String
+)
+
 data class OrderItem(
     val name: String,
-    val cost: Double,
+    val quantity: String,
+    val variationName: String,
+    val totalMoney: Money,
     val alreadyPayed: Boolean = false,
     var selected: Boolean = false
 )
@@ -118,7 +136,7 @@ fun BillItem(
             )
         }
         Text(
-            text = "$${item.cost}",
+            text = "$${item.totalMoney.amount}",
             color = textColor,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(end = 8.dp),

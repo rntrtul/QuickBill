@@ -21,14 +21,13 @@ const port = process.env.PORT;
     }
 
     const app = express();
-
+    const router = express.Router();
     app.use(cors());
     app.options("*", cors());
 
     app.use(bodyParser.json()); // support json encoded bodies
     app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
-    // app.use("/v1.0", require("./routes/index")(app));
-    mountRoutes(app);
+    app.use("/api", mountRoutes(router));
 
     app.listen(port, () => console.log(`Backend listening at http://${host}:${port}`));
   } catch (e) {

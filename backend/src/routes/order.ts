@@ -12,7 +12,7 @@ import { ordersApi } from "../api/square";
 
 const router = express.Router();
 
-router.post(":orderId/pay", async (req: Request, res: Response) => {
+router.post("/:orderId/pay", async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { idempotencyKey, paymentIds } = req.body;
   try {
