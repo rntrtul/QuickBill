@@ -24,7 +24,7 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
     const { result, ...httpResponse } = await ordersApi.payOrder(orderId, paymentBody);
     const { statusCode, body } = httpResponse;
 
-    res.status(statusCode).send(body);
+    res.status(statusCode).send(result.order);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
