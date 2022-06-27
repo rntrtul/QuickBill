@@ -14,7 +14,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url 'https://sdk.squareup.com/public/android'
+            url 'https://sdk.squareup.com/public/android',
+            url 'https://jitpack.io'
         }
     }
 }

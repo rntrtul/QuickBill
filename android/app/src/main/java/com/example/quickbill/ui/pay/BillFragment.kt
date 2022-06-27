@@ -24,7 +24,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import sqip.*
 import sqip.CardEntry.DEFAULT_CARD_ENTRY_REQUEST_CODE
-import sqip.CardEntry.handleActivityResult
+import com.example.quickbill.api.API
+import java.time.temporal.TemporalAmount
 import java.util.*
 
 
@@ -36,16 +37,14 @@ class BillFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        val locationId = requireArguments().get("location_id")
-        val tableNumber = requireArguments().get("table_number")
-
         return ComposeView(requireContext()).apply {
             setContent {
                 val billViewModel: BillViewModel = viewModel()
+                val tableNum = API.instance.tableNum
+                val locationId = API.instance.locationId
 
                 Column {
-                    Text(text = "table #$tableNumber at restaurant $locationId")
+                    Text(text = "table #$tableNum at restaurant $locationId")
                     Text(text = "Pay $${billViewModel.totalCost}")
                     Button(onClick = {
                         CardEntry.startCardEntryActivity( requireActivity(), true,

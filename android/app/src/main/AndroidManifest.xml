@@ -29,6 +29,10 @@
         <meta-data
             android:name="sqip.SQUARE_APPLICATION_ID"
             android:value="sandbox-sq0idb-WJLNDmDDD4QzAkmtHqBA3w"/>
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
     </application>
-
+    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>
