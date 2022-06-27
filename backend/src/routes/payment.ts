@@ -13,6 +13,7 @@ router.post("/", async (req: Request, res: Response) => {
         sourceId,
         idempotencyKey,
         amountMoney,
+        autocomplete: false,
     };
 
     try {
