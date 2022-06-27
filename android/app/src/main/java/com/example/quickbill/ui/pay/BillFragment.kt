@@ -1,15 +1,17 @@
 package com.example.quickbill.ui.pay
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
-import androidx.compose.material.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,15 +20,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.Navigation
-import com.example.quickbill.R
-import java.time.temporal.TemporalAmount
+import sqip.*
+import sqip.CardEntry.DEFAULT_CARD_ENTRY_REQUEST_CODE
+import sqip.CardEntry.handleActivityResult
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 /**
  * A fragment representing a list of Items.
@@ -47,7 +47,10 @@ class BillFragment : Fragment() {
                 Column {
                     Text(text = "table #$tableNumber at restaurant $locationId")
                     Text(text = "Pay $${billViewModel.totalCost}")
-                    Button(onClick = {}) {
+                    Button(onClick = {
+                        CardEntry.startCardEntryActivity( requireActivity(), true,
+                            DEFAULT_CARD_ENTRY_REQUEST_CODE)
+                    }) {
                         Text(text = "Pay now")
                     }
                     Box(
