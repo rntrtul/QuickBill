@@ -3,23 +3,39 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/navigation_pay">
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="com.example.quickbill.ui.home.HomeFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/navigation_analytics"
+        android:name="com.example.quickbill.ui.analytics.AnalyticsFragment"
+        android:label="@string/title_analytics"
+        tools:layout="@layout/fragment_analytics" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.example.quickbill.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_pay"
+        android:name="com.example.quickbill.ui.pay.PayFragment"
+        android:label="@string/title_pay"
+        tools:layout="@layout/fragment_pay" >
+        <action
+            android:id="@+id/action_navigation_pay_to_billFragment"
+            app:destination="@id/billFragment" />
+    </fragment>
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.example.quickbill.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_settings"
+        android:name="com.example.quickbill.ui.settings.SettingsFragment"
+        android:label="@string/title_settings"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/billFragment"
+        android:name="com.example.quickbill.ui.pay.BillFragment"
+        android:label="@string/title_bill"
+        tools:layout="@layout/fragment_bill_list">
+        <argument
+            android:name="location_id"
+            app:argType="string" />
+        <argument
+            android:name="table_number"
+            app:argType="integer" />
+    </fragment>
 </navigation>

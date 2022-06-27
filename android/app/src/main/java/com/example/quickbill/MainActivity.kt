@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
+import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -28,20 +30,27 @@ class MainActivity : AppCompatActivity() {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         val appBarConfiguration = AppBarConfiguration(setOf(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications))
+                R.id.navigation_analytics, R.id.navigation_pay, R.id.navigation_settings))
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-
-        // Temporary code for debugging the QR code scanner stuff. Will integrate properly when rest of app is ready.
-        startScan( this )
-        debugShowGeneratedPopupQrCode( this, "jimmy buckets" )
     }
 
-    // Temporary code for debugging the QR code scanner stuff. Will integrate properly when rest of app is ready.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data) // Ignore the fact that it's deprecated.
-        val scanResult = getScanResult( resultCode, data )
-        Log.d( "MainActivity - onActivityResult()", "Scan result: $scanResult" )
-        if ( scanResult != null ) debugPutScanResultInPopup( this, scanResult )
+
+        if ( isScanActivityResultQRCodeScanner( requestCode ) ) {
+            val scanResult = getScanResult(resultCode, data)
+            Log.d("Main Activity - onActivityResult() - QR Code Branch", "Scan result: $scanResult")
+            if ( scanResult != null ) {
+                val scanTokens: List<String> = scanResult.split('-')
+                val locationId = scanTokens.get(0)
+                val tableNum = Integer.parseInt(scanTokens.get(1))
+                val bundle = bundleOf("location_id" to locationId, "table_number" to tableNum)
+                findNavController(R.id.nav_host_fragment_activity_main).navigate(
+                    R.id.action_navigation_pay_to_billFragment,
+                    bundle
+                )
+            }
+        }
     }
 }

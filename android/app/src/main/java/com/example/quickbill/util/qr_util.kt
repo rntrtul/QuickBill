@@ -69,8 +69,6 @@ fun getScanResult( resultCode : Int, data : Intent? ): String? {
     return null
 }
 
-fun debugPutScanResultInPopup( context : Context, scanResult : String ) {
-    val textView = TextView( context )
-    textView.text = "Scan result: $scanResult"
-    createDebugPopupAndShow( context, textView )
+fun isScanActivityResultQRCodeScanner( requestCode : Int ): Boolean {
+    return requestCode == IntentIntegrator.REQUEST_CODE;
 }
