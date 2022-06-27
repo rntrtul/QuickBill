@@ -19,11 +19,8 @@ import sqip.CardDetails
 import sqip.CardEntry
 import sqip.CardEntry.setCardNonceBackgroundHandler
 import sqip.CardEntryActivityResult
-
-=======
 import com.example.quickbill.util.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
->>>>>>> main
 
 class MainActivity : AppCompatActivity() {
 
