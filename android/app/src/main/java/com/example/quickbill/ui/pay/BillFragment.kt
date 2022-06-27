@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
+import androidx.compose.material.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,9 +18,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.Navigation
+import com.example.quickbill.R
 
 /**
  * A fragment representing a list of Items.
@@ -40,6 +44,9 @@ class BillFragment : Fragment() {
                 Column {
                     Text(text = "table #$tableNumber at restaurant $locationId")
                     Text(text = "Pay $${billViewModel.totalCost}")
+                    Button(onClick = {}) {
+                        Text(text = "Pay now")
+                    }
                     Box(
                         Modifier
                             .fillMaxWidth()

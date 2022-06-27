@@ -23,6 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="sqip.SQUARE_APPLICATION_ID"
+            android:value="sandbox-sq0idb-WJLNDmDDD4QzAkmtHqBA3w"/>
     </application>
 
 </manifest>
