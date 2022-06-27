@@ -10,6 +10,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
 import com.example.quickbill.util.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -40,15 +41,21 @@ class MainActivity : AppCompatActivity() {
 
         if ( isScanActivityResultQRCodeScanner( requestCode ) ) {
             val scanResult = getScanResult(resultCode, data)
-            Log.d("Main Activity - onActivityResult() - QR Code Branch", "Scan result: $scanResult")
+            Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Scan result: $scanResult" )
             if ( scanResult != null ) {
-                val scanTokens: List<String> = scanResult.split('-')
-                val locationId = scanTokens.get(0)
-                val tableNum = Integer.parseInt(scanTokens.get(1))
-                val bundle = bundleOf("location_id" to locationId, "table_number" to tableNum)
-                findNavController(R.id.nav_host_fragment_activity_main).navigate(
-                    R.id.action_navigation_pay_to_billFragment,
-                    bundle
+                val scanTokens : List<String> = scanResult.split( '-' )
+                if (scanTokens.isEmpty()) return;
+                val locationId = scanTokens[ 0 ]
+                var tableNum = 0;
+                try {
+                    tableNum = Integer.parseInt(scanTokens[1])
+                } catch ( exception : Exception ) {
+                    Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Could not parse table number!" )
+                    return;
+                }
+                API.instance.setLocationAndTableNum( locationId, tableNum )
+                findNavController( R.id.nav_host_fragment_activity_main ).navigate(
+                        R.id.action_navigation_pay_to_billFragment,
                 )
             }
         }

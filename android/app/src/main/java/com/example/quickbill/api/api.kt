@@ -22,13 +22,23 @@ class API {
         val instance: API by lazy { Holder.instance }
     }
 
-    var location_id: String = "L3GAERGV19EXB"
-    var table_number: String = "1"
+    var locationId: String? = null
+    var tableNum: Int? = null
+
+    fun setLocationAndTableNum( locationId : String?, tableNum : Int? ) {
+        this.locationId = locationId
+        this.tableNum = tableNum
+    }
+
+    fun isQrCodeScanned() : Boolean {
+        if ( locationId == null || tableNum == null ) return false;
+        return true;
+    }
 
     fun getBill(): Bill {
         var result: String = ""
         var job = GlobalScope.launch(Dispatchers.IO) {
-            result = URL( baseURL + "order/" + "location/" + location_id + "/table/" + table_number).readText()
+            result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
         }
         runBlocking {
             job.join() // wait until child coroutine completes
