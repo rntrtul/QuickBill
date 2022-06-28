@@ -46,14 +46,16 @@ class BillFragment : Fragment() {
                         Modifier
                             .fillMaxWidth()
                     ) {
-                        BillList(
-                            billViewModel.items,
-                            onSelectItem = { item, selected ->
-                                billViewModel.itemSelected(
-                                    item,
-                                    selected
-                                )
-                            })
+                        billViewModel.items?.let {
+                            BillList(
+                                it,
+                                onSelectItem = { item, selected ->
+                                    billViewModel.itemSelected(
+                                        item,
+                                        selected
+                                    )
+                                })
+                        }
                     }
                 }
             }

@@ -54,9 +54,13 @@ class MainActivity : AppCompatActivity() {
                     return;
                 }
                 API.instance.setLocationAndTableNum( locationId, tableNum )
-                findNavController( R.id.nav_host_fragment_activity_main ).navigate(
+                if (API.instance.bill == null) {
+                    // display popup
+                } else {
+                    findNavController( R.id.nav_host_fragment_activity_main ).navigate(
                         R.id.action_navigation_pay_to_billFragment,
-                )
+                    )
+                }
             }
         }
     }
