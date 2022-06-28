@@ -3,9 +3,8 @@ package com.example.quickbill
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.os.bundleOf
-import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -44,27 +43,61 @@ class MainActivity : AppCompatActivity() {
         setCardNonceBackgroundHandler(cardHandler)
     }
 
+    fun handleInvalidQrCode() {
+        // Show a toast message indicating that the QR code was invalid.
+        val text = "QR code is invalid. Please contact the restaurant owner."
+        val duration = Toast.LENGTH_LONG
+        val toast = Toast.makeText( applicationContext, text, duration )
+        toast.show()
+
+        // Invalidate the location ID and table number scanned.
+        API.instance.invalidateLocationAndTableNum()
+
+        // Go back to the scan QR code page.
+        findNavController( R.id.nav_host_fragment_activity_main ).navigate(
+                R.id.navigation_pay,
+        )
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data) // Ignore the fact that it's deprecated.
 
         if ( isScanActivityResultQRCodeScanner( requestCode ) ) {
             val scanResult = getScanResult(resultCode, data)
             Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Scan result: $scanResult" )
+
             if ( scanResult != null ) {
                 val scanTokens : List<String> = scanResult.split( '-' )
-                if (scanTokens.isEmpty()) return;
+                if ( scanTokens.size != 3 ) {
+                    handleInvalidQrCode()
+                    return
+                }
+
                 val locationId = scanTokens[ 0 ]
+
+                // Parse table number.
                 var tableNum = 0;
                 try {
                     tableNum = Integer.parseInt(scanTokens[1])
                 } catch ( exception : Exception ) {
                     Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Could not parse table number!" )
-                    return;
+                    handleInvalidQrCode()
+                    return
                 }
-                API.instance.setLocationAndTableNum( locationId, tableNum )
-                findNavController( R.id.nav_host_fragment_activity_main ).navigate(
+
+                val restaurantName = scanTokens[ 2 ]
+
+                // Set the location ID and table num (also requesting the bill from the API).
+                API.instance.setLocationAndTableNum( locationId, tableNum, restaurantName )
+
+                if ( API.instance.bill == null ) {
+                    handleInvalidQrCode()
+                } else {
+                    // Go to the bill.
+                    findNavController( R.id.nav_host_fragment_activity_main ).navigate(
                         R.id.action_navigation_pay_to_billFragment,
-                )
+                    )
+                }
             }
         } else if ( requestCode == 51789 ) {
             CardEntry.handleActivityResult( data, object : sqip.Callback<CardEntryActivityResult> {

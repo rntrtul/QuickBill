@@ -29,6 +29,18 @@ import java.time.temporal.TemporalAmount
 import java.util.*
 
 
+
+// Used for displaying prices and amount to pay.
+fun centsToDisplayedAmnt( amnt : Int ) : String {
+    val dollars = amnt / 100
+    val cents = amnt % 100
+    if ( cents < 10 ) {
+        return "$${ dollars }.0${ cents }"
+    } else {
+        return "$${ dollars }.${ cents }"
+    }
+}
+
 /**
  * A fragment representing a list of Items.
  */
@@ -41,11 +53,11 @@ class BillFragment : Fragment() {
             setContent {
                 val billViewModel: BillViewModel = viewModel()
                 val tableNum = API.instance.tableNum
-                val locationId = API.instance.locationId
+                val restaurantName = API.instance.restaurantName
 
                 Column {
-                    Text(text = "table #$tableNum at restaurant $locationId")
-                    Text(text = "Pay $${billViewModel.totalCost}")
+                    Text(text = "table #$tableNum at restaurant $restaurantName")
+                    Text(text = "Pay ${ centsToDisplayedAmnt( billViewModel.totalCost ) }")
                     Button(onClick = {
                         API.instance.amountToPay = billViewModel.totalCost
                         CardEntry.startCardEntryActivity( requireActivity(), true,
@@ -57,14 +69,16 @@ class BillFragment : Fragment() {
                         Modifier
                             .fillMaxWidth()
                     ) {
-                        BillList(
-                            billViewModel.items,
-                            onSelectItem = { item, selected ->
-                                billViewModel.itemSelected(
-                                    item,
-                                    selected
-                                )
-                            })
+                        billViewModel.items?.let {
+                            BillList(
+                                it,
+                                onSelectItem = { item, selected ->
+                                    billViewModel.itemSelected(
+                                        item,
+                                        selected
+                                    )
+                                })
+                        }
                     }
                 }
             }
@@ -76,7 +90,8 @@ data class Bill(
     val id: String,
     val locationId: String,
     val lineItems: ArrayList<OrderItem>,
-    val totalMoney: Money
+    val totalMoney: Money,
+    val restaurantName: String
 )
 
 //todo: change amount to int every
@@ -139,7 +154,7 @@ fun BillItem(
             )
         }
         Text(
-            text = "$${item.totalMoney.amount}",
+            text = "${ centsToDisplayedAmnt( item.totalMoney.amount.toInt() ) }",
             color = textColor,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(end = 8.dp),

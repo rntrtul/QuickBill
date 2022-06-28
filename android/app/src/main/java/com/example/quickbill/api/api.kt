@@ -11,13 +11,12 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.json.JSONObject
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
+import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -25,7 +24,9 @@ import java.util.*
 class API {
 
     private val baseURL = "https://quickbill.alexnainer.com/api/"
+
     var amountToPay = 0
+    var bill: Bill? = null
 
     private object Holder {
         val instance = API()
@@ -37,10 +38,18 @@ class API {
 
     var locationId: String? = null
     var tableNum: Int? = null
+    var restaurantName: String? = null
 
-    fun setLocationAndTableNum( locationId : String?, tableNum : Int? ) {
+    fun setLocationAndTableNum( locationId : String?, tableNum : Int?, restaurantName : String? ) {
         this.locationId = locationId
         this.tableNum = tableNum
+        this.restaurantName = restaurantName
+        this.callBill()
+    }
+
+    fun invalidateLocationAndTableNum() {
+        locationId = null
+        tableNum = null
     }
 
     fun isQrCodeScanned() : Boolean {
@@ -48,15 +57,23 @@ class API {
         return true;
     }
 
-    fun getBill(): Bill {
+    fun callBill() {
         var result: String = ""
         var job = GlobalScope.launch(Dispatchers.IO) {
-            result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
+            try {
+                result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
+            } catch (e: Exception) {
+                result = ""
+
+            }
+
         }
         runBlocking {
             job.join() // wait until child coroutine completes
         }
-        return Gson().fromJson(result, Bill::class.java)
+        if (result != "") {
+            this.bill = Gson().fromJson(result, Bill::class.java)
+        }
     }
 
     fun makePayment(nonce: String): String {
