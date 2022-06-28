@@ -26,11 +26,18 @@ class API {
 
     var locationId: String? = null
     var tableNum: Int? = null
+    var restaurantName: String? = null
 
-    fun setLocationAndTableNum( locationId : String?, tableNum : Int? ) {
+    fun setLocationAndTableNum( locationId : String?, tableNum : Int?, restaurantName : String? ) {
         this.locationId = locationId
         this.tableNum = tableNum
+        this.restaurantName = restaurantName
         this.callBill()
+    }
+
+    fun invalidateLocationAndTableNum() {
+        locationId = null
+        tableNum = null
     }
 
     fun isQrCodeScanned() : Boolean {

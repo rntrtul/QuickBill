@@ -58,6 +58,7 @@ class PayFragment : Fragment() {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if ( API.instance.isQrCodeScanned() ) {
+            API.instance.callBill() // Need to make call in case bill changes
             findNavController(this).navigate(R.id.action_navigation_pay_to_billFragment)
         }
     }
