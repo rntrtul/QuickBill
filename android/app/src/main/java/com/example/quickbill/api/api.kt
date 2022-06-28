@@ -7,12 +7,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.lang.Exception
 import java.net.URL
 
 
 class API {
 
     private val baseURL = "https://quickbill.alexnainer.com/api/"
+    var bill: Bill? = null
 
     private object Holder {
         val instance = API()
@@ -24,10 +26,18 @@ class API {
 
     var locationId: String? = null
     var tableNum: Int? = null
+    var restaurantName: String? = null
 
-    fun setLocationAndTableNum( locationId : String?, tableNum : Int? ) {
+    fun setLocationAndTableNum( locationId : String?, tableNum : Int?, restaurantName : String? ) {
         this.locationId = locationId
         this.tableNum = tableNum
+        this.restaurantName = restaurantName
+        this.callBill()
+    }
+
+    fun invalidateLocationAndTableNum() {
+        locationId = null
+        tableNum = null
     }
 
     fun isQrCodeScanned() : Boolean {
@@ -35,15 +45,23 @@ class API {
         return true;
     }
 
-    fun getBill(): Bill {
+    fun callBill() {
         var result: String = ""
         var job = GlobalScope.launch(Dispatchers.IO) {
-            result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
+            try {
+                result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
+            } catch (e: Exception) {
+                result = ""
+
+            }
+
         }
         runBlocking {
             job.join() // wait until child coroutine completes
         }
-        return Gson().fromJson(result, Bill::class.java)
+        if (result != "") {
+            this.bill = Gson().fromJson(result, Bill::class.java)
+        }
     }
 }
 

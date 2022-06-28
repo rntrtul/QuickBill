@@ -38,22 +38,25 @@ class BillFragment : Fragment() {
                 val billViewModel: BillViewModel = viewModel()
                 val tableNum = API.instance.tableNum
                 val locationId = API.instance.locationId
+                val restaurantName = API.instance.restaurantName
 
                 Column {
-                    Text(text = "table #$tableNum at restaurant $locationId")
+                    Text(text = "table #$tableNum at restaurant $restaurantName")
                     Text(text = "Pay $${billViewModel.totalCost}")
                     Box(
                         Modifier
                             .fillMaxWidth()
                     ) {
-                        BillList(
-                            billViewModel.items,
-                            onSelectItem = { item, selected ->
-                                billViewModel.itemSelected(
-                                    item,
-                                    selected
-                                )
-                            })
+                        billViewModel.items?.let {
+                            BillList(
+                                it,
+                                onSelectItem = { item, selected ->
+                                    billViewModel.itemSelected(
+                                        item,
+                                        selected
+                                    )
+                                })
+                        }
                     }
                 }
             }
@@ -65,7 +68,8 @@ data class Bill(
     val id: String,
     val locationId: String,
     val lineItems: ArrayList<OrderItem>,
-    val totalMoney: Money
+    val totalMoney: Money,
+    val restaurantName: String
 )
 
 
