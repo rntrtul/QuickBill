@@ -11,17 +11,17 @@ class BillViewModel : ViewModel() {
     private val _bill: Bill = API.instance.getBill()
 
     private val _items = _bill.lineItems.toMutableStateList()
-    private val _totalCost = mutableStateOf(0.0)
+    private val _totalCost = mutableStateOf(0)
 
     val items: List<OrderItem> get() = _items
-    val totalCost: Double get() = _totalCost.value
+    val totalCost: Int get() = _totalCost.value
 
     fun itemSelected(item: OrderItem, selected: Boolean) {
         item.selected = selected
         if (selected) {
-            _totalCost.value += item.totalMoney.amount.toDouble()
+            _totalCost.value += item.totalMoney.amount.toInt()
         } else {
-            _totalCost.value -= item.totalMoney.amount.toDouble()
+            _totalCost.value -= item.totalMoney.amount.toInt()
         }
     }
 }

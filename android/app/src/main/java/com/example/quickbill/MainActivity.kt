@@ -12,7 +12,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
-<<<<<<< HEAD
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import sqip.Card
 import sqip.CardDetails
@@ -20,7 +19,6 @@ import sqip.CardEntry
 import sqip.CardEntry.setCardNonceBackgroundHandler
 import sqip.CardEntryActivityResult
 import com.example.quickbill.util.*
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 

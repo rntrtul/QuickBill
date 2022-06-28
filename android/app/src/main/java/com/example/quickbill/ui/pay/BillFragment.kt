@@ -47,6 +47,7 @@ class BillFragment : Fragment() {
                     Text(text = "table #$tableNum at restaurant $locationId")
                     Text(text = "Pay $${billViewModel.totalCost}")
                     Button(onClick = {
+                        API.instance.amountToPay = billViewModel.totalCost
                         CardEntry.startCardEntryActivity( requireActivity(), true,
                             DEFAULT_CARD_ENTRY_REQUEST_CODE)
                     }) {
@@ -78,7 +79,7 @@ data class Bill(
     val totalMoney: Money
 )
 
-
+//todo: change amount to int every
 data class Money(
     val amount: String,
     val currency: String

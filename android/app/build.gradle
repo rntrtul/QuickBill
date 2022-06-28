@@ -57,6 +57,10 @@ dependencies {
 
     // Square in app sdk
     implementation "com.squareup.sdk.in-app-payments:card-entry:1.5.3"
+
+    // For making HTTP calls.
+    implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.7"
+
     implementation 'androidx.compose.runtime:runtime-livedata:1.2.0-rc02'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
     implementation 'androidx.core:core-ktx:1.7.0'
