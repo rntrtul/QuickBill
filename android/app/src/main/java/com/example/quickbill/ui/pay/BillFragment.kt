@@ -29,7 +29,7 @@ import java.time.temporal.TemporalAmount
 import java.util.*
 
 
-
+// TODO: move to utils
 // Used for displaying prices and amount to pay.
 fun centsToDisplayedAmnt( amnt : Int ) : String {
     val dollars = amnt / 100
@@ -92,6 +92,16 @@ data class Bill(
     val lineItems: ArrayList<OrderItem>,
     val totalMoney: Money,
     val restaurantName: String
+)
+
+data class Payment(
+    val id: String,
+    val amountMoney: Money,
+    val totalMoney: Money,
+    val status: String,
+    val sourceType: String,
+    val locationId: String,
+    val orderId: String,
 )
 
 //todo: change amount to int every

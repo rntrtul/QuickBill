@@ -7,11 +7,13 @@ import { paymentsApi } from "../api/square";
 const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
-  const { sourceId, idempotencyKey, amountMoney } = req.body;
-  const money: Money = { amount: BigInt(amountMoney) };
+  const { sourceId, idempotencyKey, amountMoney, orderId } = req.body;
+  const money: Money = { amount: BigInt(amountMoney), currency: "CAD" };
+  console.log("money", money);
 
   const body: CreatePaymentRequest = {
     sourceId,
+    orderId,
     idempotencyKey,
     amountMoney: money,
     autocomplete: false,
@@ -19,6 +21,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     const { result, ...httpResponse } = await paymentsApi.createPayment(body);
+    console.log("result.payment", result.payment);
     res.status(httpResponse.statusCode).send(result.payment);
   } catch (error) {
     console.log(error);

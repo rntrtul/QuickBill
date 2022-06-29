@@ -1,9 +1,11 @@
 package com.example.quickbill
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -11,13 +13,15 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
+import com.example.quickbill.ui.pay.Bill
+import com.example.quickbill.util.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
 import sqip.CardEntry.setCardNonceBackgroundHandler
 import sqip.CardEntryActivityResult
-import com.example.quickbill.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,6 +47,17 @@ class MainActivity : AppCompatActivity() {
         setCardNonceBackgroundHandler(cardHandler)
     }
 
+    // TODO: move to utils
+    fun centsToDisplayedAmnt( amnt : Int ) : String {
+        val dollars = amnt / 100
+        val cents = amnt % 100
+        if ( cents < 10 ) {
+            return "$${ dollars }.0${ cents }"
+        } else {
+            return "$${ dollars }.${ cents }"
+        }
+    }
+
     fun handleInvalidQrCode() {
         // Show a toast message indicating that the QR code was invalid.
         val text = "QR code is invalid. Please contact the restaurant owner."
@@ -59,6 +74,19 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // TODO: move to utils - should really have a separate screen (this is only for demo)
+    fun handleShowPaymentSuccessful() {
+        val alertDialog = AlertDialog.Builder(this)
+        alertDialog.setTitle("Payment Successful")
+        val bill: Bill? = API.instance.bill
+        val amountPaid = bill?.totalMoney?.amount!!.toInt()
+        alertDialog.setMessage("Paid ${centsToDisplayedAmnt(amountPaid)}!")
+        alertDialog.setPositiveButton("Done") { dialog, _ ->
+            dialog.dismiss()
+        }
+        alertDialog.show()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data) // Ignore the fact that it's deprecated.
 
@@ -68,6 +96,7 @@ class MainActivity : AppCompatActivity() {
 
             if ( scanResult != null ) {
                 val scanTokens : List<String> = scanResult.split( '-' )
+                Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Scan Tokens: $scanTokens" )
                 if ( scanTokens.size != 3 ) {
                     handleInvalidQrCode()
                     return
@@ -90,7 +119,10 @@ class MainActivity : AppCompatActivity() {
                 // Set the location ID and table num (also requesting the bill from the API).
                 API.instance.setLocationAndTableNum( locationId, tableNum, restaurantName )
 
+                Log.d( "Main Activity - onActivityResult() - QR Code Branch", "API instance Bill: " + API.instance.bill )
+
                 if ( API.instance.bill == null ) {
+                    Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Bill was null!" )
                     handleInvalidQrCode()
                 } else {
                     // Go to the bill.
@@ -109,6 +141,7 @@ class MainActivity : AppCompatActivity() {
                         val cardResult: CardDetails = result.getSuccessValue()
                         val card: Card = cardResult.card
                         val nonce = cardResult.nonce
+                        handleShowPaymentSuccessful()
                     } else if (result.isCanceled()) {
                         Log.d( "NOPE", "---------------------------------------")
                         Log.d( "NOPE", "------------ NOT ALLOWED --------------")
