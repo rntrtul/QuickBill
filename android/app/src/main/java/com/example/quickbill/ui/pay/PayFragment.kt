@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
@@ -16,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.example.quickbill.R
 import com.example.quickbill.api.API
+import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.startScan
 
 class PayFragment : Fragment() {
@@ -28,16 +31,18 @@ class PayFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val payViewModel: PayViewModel = viewModel()
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = {
-                            activity?.let { startScan(it) }
-                        }) {
-                        Text(text = "SCAN QR CODE")
+                QuickBillTheme {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.primary),
+                            onClick = {
+                                activity?.let { startScan(it) }
+                            }) {
+                            Text(text = "SCAN QR CODE", color = MaterialTheme.colorScheme.onPrimary)
+                        }
                     }
                 }
             }

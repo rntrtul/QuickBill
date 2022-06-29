@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.quickbill.ui.theme.QuickBillTheme
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -37,19 +39,27 @@ class AnalyticsFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val analyticsViewModel: AnalyticsViewModel = viewModel()
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(8.dp)
-                ) {
-                    Text(text = "Spending Analysis", modifier = Modifier.padding(8.dp))
-                    Chart()
-                    Chart(
-                        title = "Calories Consumed",
-                        yAxisName = "Calories (Kcal)",
-                        xAxisData = listOf(4f, 3f, 2f, 7f, 6f, 1f, 5f)
-                    )
+                QuickBillTheme {
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = "Spending Analysis",
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Chart()
+                        Chart(
+                            title = "Calories Consumed",
+                            yAxisName = "Calories (Kcal)",
+                            xAxisData = listOf(4f, 3f, 2f, 7f, 6f, 1f, 5f)
+                        )
+                    }
                 }
             }
         }
@@ -73,46 +83,61 @@ fun Chart(
     val dataSet = BarDataSet(entries, "foobar")
     dataSet.setDrawValues(false)
     val lineData = BarData(dataSet)
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = title, modifier = Modifier.padding(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+
+    QuickBillTheme {
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = yAxisName, modifier = Modifier
-                    .vertical()
-                    .rotate(-90f)
-                    .padding(4.dp)
+                text = title, modifier = Modifier.padding(8.dp),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleSmall
             )
 
-            AndroidView(
-                factory = { context ->
-                    val chart = BarChart(context)
-                    chart.data = lineData
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = yAxisName, modifier = Modifier
+                        .vertical()
+                        .rotate(-90f)
+                        .padding(4.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.labelSmall
+                )
 
-                    chart.axisRight.isEnabled = false
-                    chart.axisLeft.setDrawGridLines(false)
-                    chart.axisLeft.granularity = 1f
-                    chart.axisLeft.axisLineWidth = 2f
+                AndroidView(
+                    factory = { context ->
+                        val chart = BarChart(context)
+                        chart.data = lineData
+
+                        chart.axisRight.isEnabled = false
+                        chart.axisLeft.setDrawGridLines(false)
+                        chart.axisLeft.granularity = 1f
+                        chart.axisLeft.axisLineWidth = 2f
 
 
-                    chart.xAxis.setDrawGridLines(false)
-                    chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    chart.xAxis.granularity = 1f
-                    chart.xAxis.valueFormatter = IndexAxisValueFormatter(daysOfWeek)
+                        chart.xAxis.setDrawGridLines(false)
+                        chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+                        chart.xAxis.granularity = 1f
+                        chart.xAxis.valueFormatter = IndexAxisValueFormatter(daysOfWeek)
 
-                    chart.description.isEnabled = false
-                    chart.legend.isEnabled = false
+                        chart.description.isEnabled = false
+                        chart.legend.isEnabled = false
 
-                    chart.invalidate()
-                    chart
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(320.dp)
+                        chart.invalidate()
+                        chart
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(320.dp)
+                )
+            }
+            Text(
+                text = xAxisName,
+                modifier = Modifier.padding(8.dp),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.labelSmall
             )
         }
-        Text(text = xAxisName, modifier = Modifier.padding(8.dp))
     }
-
 }
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
