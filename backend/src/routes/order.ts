@@ -7,14 +7,58 @@ import {
   SearchOrdersRequest,
   PayOrderRequest,
 } from "square";
+import { v4 as uuidv4 } from "uuid";
 
 import { ordersApi } from "../api/square";
 
 const router = express.Router();
 
+router.post("/example/table/:tableId", async (req: Request, res: Response) => {
+  try {
+    const { tableId } = req.params;
+    const idempotencyKey = uuidv4();
+    const { result, ...httpResponse } = await ordersApi.createOrder({
+      order: {
+        locationId: "L3GAERGV19EXB",
+        lineItems: [
+          {
+            quantity: "1",
+            catalogObjectId: "WCQXY6CAXNFLUZHTHER3MLFT",
+            itemType: "ITEM",
+          },
+          {
+            quantity: "1",
+            catalogObjectId: "IYRQZRWFEPUPDZLGFXYHE7VQ",
+            itemType: "ITEM",
+          },
+          {
+            quantity: "1",
+            catalogObjectId: "62AKEOB7I6ICWRWXB7GCHGLQ",
+            itemType: "ITEM",
+          },
+        ],
+        ticketName: tableId,
+      },
+      idempotencyKey,
+    });
+
+    const { statusCode, body } = httpResponse;
+    res.status(statusCode).send(result.order);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
 router.post("/:orderId/pay", async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { idempotencyKey, paymentIds } = req.body;
+
+  console.log("== Pay Order");
+  console.log("orderId", orderId);
+  console.log("idempotencyKey", idempotencyKey);
+  console.log("paymentIds", paymentIds);
+
   try {
     const paymentBody: PayOrderRequest = {
       idempotencyKey,
@@ -24,7 +68,7 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
     const { result, ...httpResponse } = await ordersApi.payOrder(orderId, paymentBody);
     const { statusCode, body } = httpResponse;
 
-    res.status(statusCode).send(body);
+    res.status(statusCode).send(result.order);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
@@ -38,6 +82,10 @@ router.get("/location/:locationId/table/:tableId", async (req: Request, res: Res
     const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
       states: bodyQueryFilterStateFilterStates,
     };
+
+    console.log("get bill");
+    console.log("locationId", locationId);
+    console.log("tableId", tableId);
 
     const bodyQueryFilter: SearchOrdersFilter = {};
     bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
