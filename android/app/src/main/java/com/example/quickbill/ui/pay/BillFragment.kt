@@ -1,30 +1,31 @@
 package com.example.quickbill.ui.pay
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Checkbox
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.quickbill.api.API
 import com.example.quickbill.ui.theme.QuickBillTheme
-import sqip.*
+import sqip.CardEntry
 import sqip.CardEntry.DEFAULT_CARD_ENTRY_REQUEST_CODE
-import java.util.*
 
 // TODO: move to utils
 // Used for displaying prices and amount to pay.
@@ -46,6 +47,7 @@ class BillFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        requireActivity()
         return ComposeView(requireContext()).apply {
             setContent {
                 val tableNum = API.instance.tableNum
@@ -99,6 +101,7 @@ fun BillView(
     restaurantName: String = "FooBar"
 ) {
     val billViewModel: BillViewModel = viewModel()
+    val context = LocalContext.current
 
     QuickBillTheme {
         Column {
@@ -120,6 +123,7 @@ fun BillView(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -139,26 +143,28 @@ fun BillView(
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(8.dp),
-                text = "Bill Total: ${centsToDisplayedAmnt(billViewModel.billTotal())}",
+                text = "Total: ${centsToDisplayedAmnt(billViewModel.billTotal())}",
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(
+            Button(
                 modifier = Modifier
                     .align(Alignment.End)
-                    .padding(8.dp),
-                text = "Paying: ${centsToDisplayedAmnt(billViewModel.totalCost)}",
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Button(onClick = {
-                API.instance.amountToPay = billViewModel.totalCost
-                CardEntry.startCardEntryActivity(
-                    requireActivity(), true,
-                    DEFAULT_CARD_ENTRY_REQUEST_CODE
+                    .padding(8.dp, top = 16.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.primary),
+                enabled = billViewModel.totalCost != 0,
+                onClick = {
+                    API.instance.amountToPay = billViewModel.totalCost
+                    CardEntry.startCardEntryActivity(
+                        context.getActivity()!!, true,
+                        DEFAULT_CARD_ENTRY_REQUEST_CODE
+                    )
+                }) {
+                Text(
+                    text = "Pay ${centsToDisplayedAmnt(billViewModel.totalCost)}",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.titleMedium
                 )
-            }) {
-                Text(text = "Pay now")
             }
         }
     }
@@ -221,4 +227,11 @@ fun BillItem(
 
         }
     }
+}
+
+//todo: move out of here
+fun Context.getActivity(): AppCompatActivity? = when (this) {
+    is AppCompatActivity -> this
+    is ContextWrapper -> baseContext.getActivity()
+    else -> null
 }
