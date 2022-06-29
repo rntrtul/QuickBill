@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +74,7 @@ fun Chart(
     xAxisName: String = "Days of the week",
     xAxisData: List<Float> = listOf(1f, 2f, 3f, 4f, 5f, 6f, 7f)
 ) {
+    // todo: figure out proper mapping
     val daysOfWeek = listOf("Tmp", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
     val entries = ArrayList<BarEntry>()
@@ -85,7 +86,6 @@ fun Chart(
     val lineData = BarData(dataSet)
 
     QuickBillTheme {
-
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = title, modifier = Modifier.padding(8.dp),
@@ -112,7 +112,6 @@ fun Chart(
                         chart.axisLeft.setDrawGridLines(false)
                         chart.axisLeft.granularity = 1f
                         chart.axisLeft.axisLineWidth = 2f
-
 
                         chart.xAxis.setDrawGridLines(false)
                         chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
