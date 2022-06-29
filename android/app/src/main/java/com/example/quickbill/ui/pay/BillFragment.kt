@@ -10,8 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Checkbox
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +50,6 @@ class BillFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        requireActivity()
         return ComposeView(requireContext()).apply {
             setContent {
                 val tableNum = API.instance.tableNum
@@ -151,8 +153,8 @@ fun BillView(
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(8.dp, top = 16.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.primary),
                 enabled = billViewModel.totalCost != 0,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 onClick = {
                     API.instance.amountToPay = billViewModel.totalCost
                     CardEntry.startCardEntryActivity(
@@ -162,7 +164,7 @@ fun BillView(
                 }) {
                 Text(
                     text = "Pay ${centsToDisplayedAmnt(billViewModel.totalCost)}",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
