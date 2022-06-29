@@ -1,10 +1,10 @@
 package com.example.quickbill.ui.pay
 
-import com.example.quickbill.api.API
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
+import com.example.quickbill.api.API
 
 
 class BillViewModel : ViewModel() {
@@ -24,6 +24,10 @@ class BillViewModel : ViewModel() {
         } else {
             _totalCost.value -= item.totalMoney.amount.toInt()
         }
+    }
+
+    fun billTotal(): Int {
+        return _items?.sumOf { orderItem -> orderItem.totalMoney.amount.toInt() } ?: 0
     }
 }
 
