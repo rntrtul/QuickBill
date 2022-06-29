@@ -41,6 +41,8 @@ android {
 
 
 dependencies {
+    // Charts
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     // Integration with activities
     implementation 'androidx.activity:activity-compose:1.4.0'
     // Compose Material Design
