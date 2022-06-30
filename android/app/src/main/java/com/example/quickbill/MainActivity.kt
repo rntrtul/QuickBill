@@ -11,10 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,11 +28,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
 import com.example.quickbill.ui.analytics.AnalyticsContent
-import com.example.quickbill.ui.pay.Bill
 import com.example.quickbill.ui.pay.BillView
+import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
+import com.example.quickbill.util.centsToDisplayedAmount
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
@@ -60,24 +57,13 @@ class MainActivity : AppCompatActivity() {
         setCardNonceBackgroundHandler(cardHandler)
     }
 
-    // TODO: move to utils
-    fun centsToDisplayedAmnt(amnt: Int): String {
-        val dollars = amnt / 100
-        val cents = amnt % 100
-        if (cents < 10) {
-            return "$${dollars}.0${cents}"
-        } else {
-            return "$${dollars}.${cents}"
-        }
-    }
-
     // TODO: move to utils - should really have a separate screen (this is only for demo)
     fun handleShowPaymentSuccessful() {
         val alertDialog = AlertDialog.Builder(this)
         alertDialog.setTitle("Payment Successful")
-        val bill: Bill? = API.instance.bill
-        val amountPaid = bill?.totalMoney?.amount!!.toInt()
-        alertDialog.setMessage("Paid ${centsToDisplayedAmnt(amountPaid)}!")
+        val order: Order? = API.instance.order
+        val amountPaid = order?.totalMoney?.amount!!.toInt()
+        alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
         alertDialog.setPositiveButton("Done") { dialog, _ ->
             dialog.dismiss()
         }
@@ -113,20 +99,38 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-//todo: add icons
+//todo: add filled vs outline icons
 sealed class Screen(
     val route: String,
     @StringRes val resourceId: Int,
-    @DrawableRes val iconId: Int?
+    @DrawableRes val iconId: Int?,
+    val iconContentDescription: String?
 ) {
-    object Analytics : Screen("analytics", R.string.title_analytics, R.drawable.ic_baseline_analytics_24)
+    object Analytics :
+        Screen(
+            "analytics",
+            R.string.title_analytics,
+            R.drawable.ic_baseline_analytics_24,
+            iconContentDescription = "Analytics chart icon"
+        )
+
     object PayBill :
-        Screen("payBill", R.string.title_pay, R.drawable.ic_baseline_qr_code_scanner_24)
+        Screen(
+            "payBill",
+            R.string.title_pay,
+            R.drawable.ic_baseline_qr_code_scanner_24,
+            iconContentDescription = "QR Code scan icon"
+        )
 
     object Settings :
-        Screen("settings", R.string.title_settings, R.drawable.ic_baseline_settings_24)
+        Screen(
+            "settings",
+            R.string.title_settings,
+            R.drawable.ic_baseline_settings_24,
+            iconContentDescription = "Settings gear icon"
+        )
 
-    object BillView : Screen("billView", R.string.title_bill, null)
+    object BillView : Screen("billView", R.string.title_bill, null, null)
 
 }
 
@@ -171,11 +175,6 @@ fun NavBar(navController: NavController = rememberNavController()) {
         Screen.PayBill,
         Screen.Settings
     )
-    val icons = listOf(
-        Icons.Outlined.ShoppingCart,
-        Icons.Outlined.Refresh,
-        Icons.Outlined.Settings,
-    )
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
@@ -184,7 +183,7 @@ fun NavBar(navController: NavController = rememberNavController()) {
                 icon = {
                     Icon(
                         painter = painterResource(id = screen.iconId!!),
-                        contentDescription = null,
+                        contentDescription = screen.iconContentDescription,
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 },

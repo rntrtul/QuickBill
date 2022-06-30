@@ -42,9 +42,9 @@ class PayViewModel : ViewModel() {
         // Set the location ID and table num (also requesting the bill from the API).
         API.instance.setLocationAndTableNum(locationId, tableNum, restaurantName)
 
-        Log.d(TAG, "API instance Bill: " + API.instance.bill)
+        Log.d(TAG, "API instance Bill: " + API.instance.order)
 
-        if (API.instance.bill != null) {
+        if (API.instance.order != null) {
             _scanSuccessful = true
         } else {
             Log.e(TAG, "Bill was null!")

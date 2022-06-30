@@ -1,9 +1,7 @@
 package com.example.quickbill.util
 
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -12,8 +10,6 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
 import android.widget.RelativeLayout
-import com.google.zxing.integration.android.IntentIntegrator
-import com.google.zxing.integration.android.IntentResult
 import net.glxn.qrgen.android.QRCode
 
 // Using this library: https://github.com/kenglxn/QRGen for QR code generation
@@ -52,25 +48,3 @@ fun debugShowGeneratedPopupQrCode(context: Context, str: String) {
     createDebugPopupAndShow(context, qrCodeImage)
 }
 
-fun startScan(activity: Activity) {
-    val intentIntegrator = IntentIntegrator(activity)
-    intentIntegrator.setDesiredBarcodeFormats(listOf(IntentIntegrator.QR_CODE))
-    intentIntegrator.setOrientationLocked(false)
-    intentIntegrator.setPrompt("Scan the QR code in the restaurant.")
-    intentIntegrator.setBeepEnabled(false)
-    intentIntegrator.initiateScan()
-}
-
-// Put this inside an onActivityResult() callback.
-fun getScanResult(resultCode: Int, data: Intent?): String? {
-    var result: IntentResult? =
-        IntentIntegrator.parseActivityResult(resultCode, data) ?: return null
-    if (result != null) {
-        return result.contents
-    }
-    return null
-}
-
-fun isScanActivityResultQRCodeScanner(requestCode: Int): Boolean {
-    return requestCode == IntentIntegrator.REQUEST_CODE;
-}

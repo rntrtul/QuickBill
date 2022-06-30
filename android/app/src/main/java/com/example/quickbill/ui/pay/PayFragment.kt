@@ -1,58 +1,32 @@
 package com.example.quickbill.ui.pay
 
-import android.content.Context
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.fragment.app.Fragment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
-import com.example.quickbill.R
+import androidx.navigation.compose.rememberNavController
 import com.example.quickbill.Screen
 import com.example.quickbill.api.API
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
-class PayFragment : Fragment() {
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-//                PayContent()
-            }
-        }
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-//        if (API.instance.isQrCodeScanned()) {
-//            API.instance.callBill() // Need to make call in case bill changes
-//            findNavController(this).navigate(R.id.action_navigation_pay_to_billFragment)
-//        }
-    }
-}
-
+@Preview
 @Composable
-fun PayContent(navController: NavController) {
+fun PayContent(navController: NavController = rememberNavController()) {
     val payViewModel: PayViewModel = viewModel()
     val context = LocalContext.current
 
@@ -77,6 +51,7 @@ fun PayContent(navController: NavController) {
 
     QuickBillTheme {
         Column(
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
