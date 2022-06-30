@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -22,17 +23,21 @@ class SettingsFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                val settingsViewModel: SettingsViewModel = viewModel()
-                val text by settingsViewModel.text.observeAsState()
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    text?.let { Text(text = it) }
-                }
+                SettingsContent()
             }
         }
     }
+}
 
+@Composable
+fun SettingsContent() {
+    val settingsViewModel: SettingsViewModel = viewModel()
+    val text by settingsViewModel.text.observeAsState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        text?.let { Text(text = it) }
+    }
 }

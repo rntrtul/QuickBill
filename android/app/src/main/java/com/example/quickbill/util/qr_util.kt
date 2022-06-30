@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
 import android.widget.RelativeLayout
-import android.widget.TextView
 import com.google.zxing.integration.android.IntentIntegrator
 import com.google.zxing.integration.android.IntentResult
 import net.glxn.qrgen.android.QRCode
@@ -22,13 +21,13 @@ import net.glxn.qrgen.android.QRCode
 
 // Using this library: https://github.com/zxing/zxing for QR code scanning
 
-fun generateQrBitmapFromString( str : String ) : Bitmap {
-    return QRCode.from( str ).bitmap()
+fun generateQrBitmapFromString(str: String): Bitmap {
+    return QRCode.from(str).bitmap()
 }
 
-fun createDebugPopupAndShow( context : Context, view : View) {
+fun createDebugPopupAndShow(context: Context, view: View) {
     // Code taken (and modified) from here: https://stackoverflow.com/a/24946375
-    val builder = Dialog( context )
+    val builder = Dialog(context)
     builder.requestWindowFeature(Window.FEATURE_NO_TITLE)
     builder.window?.setBackgroundDrawable(
         ColorDrawable(Color.TRANSPARENT)
@@ -36,39 +35,42 @@ fun createDebugPopupAndShow( context : Context, view : View) {
     builder.setOnDismissListener {
         //nothing;
     }
-    builder.addContentView( view, RelativeLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-    ) )
+    builder.addContentView(
+        view, RelativeLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
     builder.show()
 }
 
 // Code to demonstrate QR code generation.
-fun debugShowGeneratedPopupQrCode( context : Context, str : String ) {
-    val qrCodeBitmap: Bitmap = generateQrBitmapFromString( str )
-    val qrCodeImage = ImageView( context )
-    qrCodeImage.setImageBitmap( qrCodeBitmap )
-    createDebugPopupAndShow( context, qrCodeImage )
+fun debugShowGeneratedPopupQrCode(context: Context, str: String) {
+    val qrCodeBitmap: Bitmap = generateQrBitmapFromString(str)
+    val qrCodeImage = ImageView(context)
+    qrCodeImage.setImageBitmap(qrCodeBitmap)
+    createDebugPopupAndShow(context, qrCodeImage)
 }
 
-fun startScan( activity : Activity, ) {
-    val intentIntegrator = IntentIntegrator( activity )
-    intentIntegrator.setDesiredBarcodeFormats( listOf( IntentIntegrator.QR_CODE ) )
-    intentIntegrator.setOrientationLocked( false )
-    intentIntegrator.setPrompt( "Scan the QR code in the restaurant." )
-    intentIntegrator.setBeepEnabled( false )
+fun startScan(activity: Activity) {
+    val intentIntegrator = IntentIntegrator(activity)
+    intentIntegrator.setDesiredBarcodeFormats(listOf(IntentIntegrator.QR_CODE))
+    intentIntegrator.setOrientationLocked(false)
+    intentIntegrator.setPrompt("Scan the QR code in the restaurant.")
+    intentIntegrator.setBeepEnabled(false)
     intentIntegrator.initiateScan()
 }
 
 // Put this inside an onActivityResult() callback.
-fun getScanResult( resultCode : Int, data : Intent? ): String? {
-    var result: IntentResult? = IntentIntegrator.parseActivityResult( resultCode, data ) ?: return null
+fun getScanResult(resultCode: Int, data: Intent?): String? {
+    var result: IntentResult? =
+        IntentIntegrator.parseActivityResult(resultCode, data) ?: return null
     if (result != null) {
         return result.contents
     }
     return null
 }
 
-fun isScanActivityResultQRCodeScanner( requestCode : Int ): Boolean {
+fun isScanActivityResultQRCodeScanner(requestCode: Int): Boolean {
     return requestCode == IntentIntegrator.REQUEST_CODE;
 }

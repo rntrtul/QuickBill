@@ -45,23 +45,23 @@ fun centsToDisplayedAmnt(amnt: Int): String {
 /**
  * A fragment representing a list of Items.
  */
-class BillFragment : Fragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                val tableNum = API.instance.tableNum
-                val restaurantName = API.instance.restaurantName
-
-                if (tableNum != null && restaurantName != null) {
-                    BillView(tableNum, restaurantName)
-                }
-            }
-        }
-    }
-}
+//class BillFragment : Fragment() {
+//    override fun onCreateView(
+//        inflater: LayoutInflater, container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        return ComposeView(requireContext()).apply {
+//            setContent {
+//                val tableNum = API.instance.tableNum
+//                val restaurantName = API.instance.restaurantName
+//
+//                if (tableNum != null && restaurantName != null) {
+//                    BillView(tableNum, restaurantName)
+//                }
+//            }
+//        }
+//    }
+//}
 
 data class Bill(
     val id: String,
@@ -98,10 +98,10 @@ data class OrderItem(
 
 @Preview
 @Composable
-fun BillView(
-    tableNum: Int = 1,
-    restaurantName: String = "FooBar"
-) {
+fun BillView() {
+    val tableNum = API.instance.tableNum!!
+    val restaurantName : String = API.instance.restaurantName!!
+
     val billViewModel: BillViewModel = viewModel()
     val context = LocalContext.current
 

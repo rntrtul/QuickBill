@@ -44,18 +44,19 @@ dependencies {
     // Charts
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     // Integration with activities
-    implementation 'androidx.activity:activity-compose:1.4.0'
+    implementation 'androidx.activity:activity-compose:1.5.0'
+    implementation 'androidx.navigation:navigation-compose:2.5.0'
     // Compose Material Design
     implementation 'androidx.compose.material:material:1.1.1'
     // Animations
     implementation 'androidx.compose.animation:animation:1.1.1'
     // Tooling support (Previews, etc.)
     implementation 'androidx.compose.ui:ui-tooling:1.1.1'
-    implementation 'androidx.compose.material3:material3:1.0.0-alpha13'
-    implementation 'androidx.compose.material3:material3-window-size-class:1.0.0-alpha13'
+    implementation 'androidx.compose.material3:material3:1.0.0-alpha14'
+    implementation 'androidx.compose.material3:material3-window-size-class:1.0.0-alpha14'
     // Integration with ViewModels
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
-    implementation 'androidx.compose.ui:ui:1.2.0-rc02'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0'
+    implementation 'androidx.compose.ui:ui:1.3.0-alpha01'
     // UI Tests
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.1.1'
 
@@ -65,16 +66,16 @@ dependencies {
     // For making HTTP calls.
     implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.7"
 
-    implementation 'androidx.compose.runtime:runtime-livedata:1.2.0-rc02'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
+    implementation 'androidx.compose.runtime:runtime-livedata:1.3.0-alpha01'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0'
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.4.2'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.4.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.0'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.5.0'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation 'junit:junit:4.13.2'
@@ -82,5 +83,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation 'com.github.kenglxn.QRGen:android:2.6.0' // for QR Code generation
-    implementation 'com.journeyapps:zxing-android-embedded:4.2.0' // for QR code scanning
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0' // for QR code scanning
 }

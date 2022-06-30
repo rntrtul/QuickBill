@@ -3,23 +3,21 @@ package com.example.quickbill.api
 
 import android.util.Log
 import com.example.quickbill.ui.pay.Bill
-import com.example.quickbill.ui.pay.OrderItem
 import com.example.quickbill.ui.pay.Payment
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.json.JSONException
-import org.json.JSONObject
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.IOException
-import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -29,6 +27,7 @@ class API {
     // TODO: should not have trailing slash - e.g. baseUrl + "/order
     private val baseURL = "https://quickbill.alexnainer.com/api/"
     var amountToPay = 0
+
     // TODO: API class should be stateless - should not have a bill class, instead caller will pass params to api function calls
     var bill: Bill? = null
 
@@ -46,7 +45,7 @@ class API {
     var restaurantName: String? = null
 
     // TODO: this should not exist
-    fun setLocationAndTableNum( locationId : String?, tableNum : Int?, restaurantName : String? ) {
+    fun setLocationAndTableNum(locationId: String?, tableNum: Int?, restaurantName: String?) {
         Log.d("API", "locationId $locationId")
         Log.d("API", "tableNum $tableNum")
         Log.d("API", "restaurantName $restaurantName")
@@ -63,20 +62,21 @@ class API {
     }
 
     // TODO: same as above, API should not have a state
-    fun isQrCodeScanned() : Boolean {
-        if ( locationId == null || tableNum == null ) return false;
-        return true;
+    fun isQrCodeScanned(): Boolean {
+        if (locationId == null || tableNum == null) return false
+        return true
     }
 
     fun callBill() {
         Log.d("API", "Call Bill!!")
         var result: String = ""
-        var job = GlobalScope.launch(Dispatchers.IO) {
+        val job = GlobalScope.launch(Dispatchers.IO) {
             try {
-                result = URL( baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
+                result =
+                    URL(baseURL + "order/" + "location/" + locationId + "/table/" + tableNum).readText()
             } catch (e: Exception) {
-                Log.d("API", "$e")
-                Log.d("API", "Error calling bill")
+                Log.e("API", "$e")
+                Log.e("API", "Error calling bill")
                 result = ""
 
             }
@@ -98,14 +98,14 @@ class API {
         val sourceId: String = nonce
         val amount: Int = amountToPay
 
-        val jsonObject = JSONObject();
+        val jsonObject = JSONObject()
         try {
-            jsonObject.put("sourceId", sourceId);
-            jsonObject.put("orderId", orderId);
-            jsonObject.put("idempotencyKey", idempotencyKey.toString());
-            jsonObject.put("amountMoney", amount.toString());
+            jsonObject.put("sourceId", sourceId)
+            jsonObject.put("orderId", orderId)
+            jsonObject.put("idempotencyKey", idempotencyKey.toString())
+            jsonObject.put("amountMoney", amount.toString())
         } catch (e: JSONException) {
-            e.printStackTrace();
+            e.printStackTrace()
         }
 
         val client = OkHttpClient()
@@ -141,22 +141,22 @@ class API {
         val idempotencyKey: UUID = UUID.randomUUID() // Generates random UUID
         val paymentIds: Array<String> = arrayOf(payment.id)
 
-        val jsonObject = JSONObject();
+        val jsonObject = JSONObject()
         try {
-            jsonObject.put("orderId", orderId);
-            jsonObject.put("idempotencyKey", idempotencyKey.toString());
-            jsonObject.put("paymentIds", JSONArray(paymentIds));
+            jsonObject.put("orderId", orderId)
+            jsonObject.put("idempotencyKey", idempotencyKey.toString())
+            jsonObject.put("paymentIds", JSONArray(paymentIds))
         } catch (e: JSONException) {
-            e.printStackTrace();
+            e.printStackTrace()
         }
 
         val client = OkHttpClient()
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val body = jsonObject.toString().toRequestBody(mediaType)
         val request: Request = Request.Builder()
-                .url(url)
-                .post(body)
-                .build()
+            .url(url)
+            .post(body)
+            .build()
 
         var response: Response? = null
         try {

@@ -35,33 +35,37 @@ class AnalyticsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         return ComposeView(requireContext()).apply {
             setContent {
-                val analyticsViewModel: AnalyticsViewModel = viewModel()
-                QuickBillTheme {
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = "Spending Analysis",
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Chart()
-                        Chart(
-                            title = "Calories Consumed",
-                            yAxisName = "Calories (Kcal)",
-                            xAxisData = listOf(4f, 3f, 2f, 7f, 6f, 1f, 5f)
-                        )
-                    }
-                }
+                AnalyticsContent()
             }
+        }
+    }
+}
+
+@Composable
+fun AnalyticsContent() {
+    val analyticsViewModel: AnalyticsViewModel = viewModel()
+    QuickBillTheme {
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "Spending Analysis",
+                modifier = Modifier.padding(8.dp),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Chart()
+            Chart(
+                title = "Calories Consumed",
+                yAxisName = "Calories (Kcal)",
+                xAxisData = listOf(4f, 3f, 2f, 7f, 6f, 1f, 5f)
+            )
         }
     }
 }
