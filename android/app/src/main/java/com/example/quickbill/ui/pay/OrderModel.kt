@@ -16,6 +16,7 @@ data class Payment(
     val sourceType: String,
     val locationId: String,
     val orderId: String,
+    var lineItems: ArrayList<OrderItem>,
 )
 
 data class Money(
