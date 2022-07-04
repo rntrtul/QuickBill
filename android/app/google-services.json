@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "298965685857",
+    "project_id": "quickbill-88a83",
+    "storage_bucket": "quickbill-88a83.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298965685857:android:9bec3697dc9da29f6bbc20",
+        "android_client_info": {
+          "package_name": "com.example.quickbill"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "298965685857-pfaibt2c0g3fhub0rl37f1rllen1gpdc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_tMPcbuwOE3ixDC0ef5mrfcLAI5pjCtA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "298965685857-pfaibt2c0g3fhub0rl37f1rllen1gpdc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

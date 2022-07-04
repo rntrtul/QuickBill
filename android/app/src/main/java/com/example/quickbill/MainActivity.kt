@@ -34,6 +34,8 @@ import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
+import com.example.quickbill.firebaseManager.FirebaseManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
@@ -52,6 +54,7 @@ class MainActivity : AppCompatActivity() {
                 MainContent()
             }
         }
+        FirebaseManager.instance.initialize(this)
 
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
