@@ -8,6 +8,7 @@ import com.example.quickbill.ui.pay.Payment
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
+import okhttp3.Request
 import okhttp3.Response
 import java.net.URL
 
@@ -19,7 +20,8 @@ class FirebaseManager {
     private var db: FirebaseFirestore? = null
 
     // sample: https://api.nal.usda.gov/fdc/v1/foods/search?query=apple&pageSize=2&api_key=redacted
-    private val baseURL = "https://api.nal.usda.gov/fdc/v1/"
+    // https://api.calorieninjas.com/v1/nutrition?query=
+    private val baseURL = "https://api.calorieninjas.com/v1/"
     private var api_key = "redacted"
 
     private object Holder {
@@ -40,10 +42,15 @@ class FirebaseManager {
     }
 
     fun getCalories(item: OrderItem): Int {
-        val query_url = baseURL + "foods/search?query="+item.name+"&pageSize=2&api_key="+api_key
+        // May also add variant name
+        val query_url = baseURL + "nutrition?query="+item.name;
         var result: String = ""
         try {
-            result = URL(query_url).readText()
+            val request: Request = Request.Builder()
+                .url(query_url)
+                .addHeader("X-Api-Key", api_key)
+                .get()
+                .build()
         } catch (e: java.lang.Exception) {
             Log.d(TAG, "$e")
             Log.d(TAG, "Error querying nutrition info")
