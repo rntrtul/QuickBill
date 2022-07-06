@@ -8,10 +8,29 @@ import com.example.quickbill.ui.pay.Payment
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.net.URL
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
+data class NutritionInfo(
+    val sugar_g: Double,
+    val fiber_g: Double,
+    val serving_size_g: Double,
+    val sodium_mg: Double,
+    val name: String,
+    val potassium_g: Double,
+    val fat_saturated_g: Double,
+    val fat_total_g: Double,
+    val calories: Double,
+    val cholesterol_mg: Double,
+    val protein_g: Double,
+    val carbohydrates_total_g: Double,
+    var date: Date,
+)
 
 class FirebaseManager {
 
@@ -41,23 +60,33 @@ class FirebaseManager {
         db = FirebaseFirestore.getInstance()
     }
 
-    fun getCalories(item: OrderItem): Int {
+    fun getCalories(item: OrderItem): NutritionInfo? {
         // May also add variant name
         val query_url = baseURL + "nutrition?query="+item.name;
-        var result: String = ""
+        var response: Response? = null
+        val client = OkHttpClient()
         try {
             val request: Request = Request.Builder()
                 .url(query_url)
                 .addHeader("X-Api-Key", api_key)
                 .get()
                 .build()
+
+            response = client.newCall(request).execute()
+
+            Log.d(TAG, "Response: $response")
+            var nutritionInfo: NutritionInfo? = null
+
+            if (response.isSuccessful) {
+                Log.d(TAG, "Response successful!!")
+                nutritionInfo = Gson().fromJson(response.body.string(), NutritionInfo::class.java)
+                return nutritionInfo
+            }
         } catch (e: java.lang.Exception) {
             Log.d(TAG, "$e")
-            Log.d(TAG, "Error querying nutrition info")
-            result = ""
+            Log.d(TAG, "Error executing nutrition info query")
         }
-        Log.d(TAG,result)
-        return 0
+        return null
     }
 
     fun addOrderToFirebase(info: Response): Boolean {
