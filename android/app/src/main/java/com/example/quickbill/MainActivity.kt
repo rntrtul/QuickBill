@@ -103,7 +103,8 @@ class MainActivity : AppCompatActivity() {
 sealed class Screen(
     val route: String,
     @StringRes val resourceId: Int,
-    @DrawableRes val iconId: Int?,
+    @DrawableRes val filledIconId: Int?,
+    @DrawableRes val outlinedIconId: Int?,
     val iconContentDescription: String?
 ) {
     object Analytics :
@@ -111,6 +112,7 @@ sealed class Screen(
             "analytics",
             R.string.title_analytics,
             R.drawable.ic_baseline_analytics_24,
+            R.drawable.ic_outline_analytics_24,
             iconContentDescription = "Analytics chart icon"
         )
 
@@ -119,6 +121,7 @@ sealed class Screen(
             "payBill",
             R.string.title_pay,
             R.drawable.ic_baseline_qr_code_scanner_24,
+            R.drawable.ic_outline_qr_code_24,
             iconContentDescription = "QR Code scan icon"
         )
 
@@ -127,10 +130,11 @@ sealed class Screen(
             "settings",
             R.string.title_settings,
             R.drawable.ic_baseline_settings_24,
+            R.drawable.ic_outline_settings_24,
             iconContentDescription = "Settings gear icon"
         )
 
-    object BillView : Screen("billView", R.string.title_bill, null, null)
+    object BillView : Screen("billView", R.string.title_bill, null, null, null)
 
 }
 
@@ -175,30 +179,35 @@ fun NavBar(navController: NavController = rememberNavController()) {
         Screen.PayBill,
         Screen.Settings
     )
-    NavigationBar {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
-        items.forEachIndexed { index, screen ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        painter = painterResource(id = screen.iconId!!),
-                        contentDescription = screen.iconContentDescription,
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                },
-                label = { Text(stringResource(id = screen.resourceId)) },
-                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                onClick = {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+    QuickBillTheme {
+        NavigationBar {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            items.forEach() { screen ->
+                val selected =
+                    currentDestination?.hierarchy?.any { it.route == screen.route } == true
+
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = if (selected) screen.filledIconId!! else screen.outlinedIconId!!),
+                            contentDescription = screen.iconContentDescription,
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    },
+                    label = { Text(stringResource(id = screen.resourceId)) },
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

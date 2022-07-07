@@ -1,10 +1,18 @@
 package com.example.quickbill.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlin.math.ln
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -74,9 +82,30 @@ fun QuickBillTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable() () -> Unit
 ) {
+    val colorScheme = if (useDarkTheme) DarkColors else LightColors
+    val systemUiController = rememberSystemUiController()
+
+    SideEffect {
+        systemUiController.setStatusBarColor(
+            color = colorScheme.surface
+        )
+        systemUiController.setNavigationBarColor(
+            color = colorScheme.surfaceColorAtElevation(3.dp)
+        )
+    }
+
     MaterialTheme(
-        colorScheme = if (useDarkTheme) DarkColors else LightColors,
+        colorScheme = colorScheme,
         typography = AppTypography,
         content = content
     )
+}
+
+// https://stackoverflow.com/a/72586380/14629524
+fun ColorScheme.surfaceColorAtElevation(
+    elevation: Dp,
+): Color {
+    if (elevation == 0.dp) return surface
+    val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
+    return surfaceTint.copy(alpha = alpha).compositeOver(surface)
 }
