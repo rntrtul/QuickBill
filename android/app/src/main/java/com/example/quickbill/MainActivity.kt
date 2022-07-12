@@ -1,21 +1,39 @@
 package com.example.quickbill
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
-import com.example.quickbill.ui.pay.Bill
-import com.example.quickbill.util.*
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.quickbill.ui.analytics.AnalyticsContent
+import com.example.quickbill.ui.pay.BillView
+import com.example.quickbill.ui.pay.Order
+import com.example.quickbill.ui.pay.PayContent
+import com.example.quickbill.ui.settings.SettingsContent
+import com.example.quickbill.ui.theme.QuickBillTheme
+import com.example.quickbill.util.centsToDisplayedAmount
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
@@ -26,61 +44,26 @@ import sqip.CardEntryActivityResult
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        val navView: BottomNavigationView = binding.navView
-
-        val navController = findNavController(R.id.nav_host_fragment_activity_main)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        val appBarConfiguration = AppBarConfiguration(setOf(
-                R.id.navigation_analytics, R.id.navigation_pay, R.id.navigation_settings))
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+        setContent {
+            QuickBillTheme {
+                MainContent()
+            }
+        }
 
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
-    }
-
-    // TODO: move to utils
-    fun centsToDisplayedAmnt( amnt : Int ) : String {
-        val dollars = amnt / 100
-        val cents = amnt % 100
-        if ( cents < 10 ) {
-            return "$${ dollars }.0${ cents }"
-        } else {
-            return "$${ dollars }.${ cents }"
-        }
-    }
-
-    fun handleInvalidQrCode() {
-        // Show a toast message indicating that the QR code was invalid.
-        val text = "QR code is invalid. Please contact the restaurant owner."
-        val duration = Toast.LENGTH_LONG
-        val toast = Toast.makeText( applicationContext, text, duration )
-        toast.show()
-
-        // Invalidate the location ID and table number scanned.
-        API.instance.invalidateLocationAndTableNum()
-
-        // Go back to the scan QR code page.
-        findNavController( R.id.nav_host_fragment_activity_main ).navigate(
-                R.id.navigation_pay,
-        )
     }
 
     // TODO: move to utils - should really have a separate screen (this is only for demo)
     fun handleShowPaymentSuccessful() {
         val alertDialog = AlertDialog.Builder(this)
         alertDialog.setTitle("Payment Successful")
-        val bill: Bill? = API.instance.bill
-        val amountPaid = bill?.totalMoney?.amount!!.toInt()
-        alertDialog.setMessage("Paid ${centsToDisplayedAmnt(amountPaid)}!")
+        val order: Order? = API.instance.order
+        val amountPaid = order?.totalMoney?.amount!!.toInt()
+        alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
         alertDialog.setPositiveButton("Done") { dialog, _ ->
             dialog.dismiss()
         }
@@ -88,67 +71,159 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data) // Ignore the fact that it's deprecated.
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        ) // Ignore the fact that it's deprecated.
 
-        if ( isScanActivityResultQRCodeScanner( requestCode ) ) {
-            val scanResult = getScanResult(resultCode, data)
-            Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Scan result: $scanResult" )
-
-            if ( scanResult != null ) {
-                val scanTokens : List<String> = scanResult.split( '-' )
-                Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Scan Tokens: $scanTokens" )
-                if ( scanTokens.size != 3 ) {
-                    handleInvalidQrCode()
-                    return
-                }
-
-                val locationId = scanTokens[ 0 ]
-
-                // Parse table number.
-                var tableNum = 0;
-                try {
-                    tableNum = Integer.parseInt(scanTokens[1])
-                } catch ( exception : Exception ) {
-                    Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Could not parse table number!" )
-                    handleInvalidQrCode()
-                    return
-                }
-
-                val restaurantName = scanTokens[ 2 ]
-
-                // Set the location ID and table num (also requesting the bill from the API).
-                API.instance.setLocationAndTableNum( locationId, tableNum, restaurantName )
-
-                Log.d( "Main Activity - onActivityResult() - QR Code Branch", "API instance Bill: " + API.instance.bill )
-
-                if ( API.instance.bill == null ) {
-                    Log.d( "Main Activity - onActivityResult() - QR Code Branch", "Bill was null!" )
-                    handleInvalidQrCode()
-                } else {
-                    // Go to the bill.
-                    findNavController( R.id.nav_host_fragment_activity_main ).navigate(
-                        R.id.action_navigation_pay_to_billFragment,
-                    )
-                }
-            }
-        } else if ( requestCode == 51789 ) {
-            CardEntry.handleActivityResult( data, object : sqip.Callback<CardEntryActivityResult> {
+        if (requestCode == 51789) {
+            CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {
                 override fun onResult(result: CardEntryActivityResult) {
                     if (result.isSuccess()) {
-                        Log.d( "NOPE", "---------------------------------------")
-                        Log.d( "NOPE", "-------------- SUCCESS ----------------")
-                        Log.d( "NOPE", "---------------------------------------")
+                        Log.d("NOPE", "---------------------------------------")
+                        Log.d("NOPE", "-------------- SUCCESS ----------------")
+                        Log.d("NOPE", "---------------------------------------")
                         val cardResult: CardDetails = result.getSuccessValue()
                         val card: Card = cardResult.card
                         val nonce = cardResult.nonce
                         handleShowPaymentSuccessful()
                     } else if (result.isCanceled()) {
-                        Log.d( "NOPE", "---------------------------------------")
-                        Log.d( "NOPE", "------------ NOT ALLOWED --------------")
-                        Log.d( "NOPE", "---------------------------------------")
+                        Log.d("NOPE", "---------------------------------------")
+                        Log.d("NOPE", "------------ NOT ALLOWED --------------")
+                        Log.d("NOPE", "---------------------------------------")
                     }
                 }
             })
         }
     }
 }
+
+//todo: add filled vs outline icons
+sealed class Screen(
+    val route: String,
+    @StringRes val resourceId: Int,
+    @DrawableRes val filledIconId: Int?,
+    @DrawableRes val outlinedIconId: Int?,
+    val iconContentDescription: String?
+) {
+    object Analytics :
+        Screen(
+            "analytics",
+            R.string.title_analytics,
+            R.drawable.ic_baseline_analytics_24,
+            R.drawable.ic_outline_analytics_24,
+            iconContentDescription = "Analytics chart icon"
+        )
+
+    object PayBill :
+        Screen(
+            "payBill",
+            R.string.title_pay,
+            R.drawable.ic_baseline_qr_code_scanner_24,
+            R.drawable.ic_outline_qr_code_24,
+            iconContentDescription = "QR Code scan icon"
+        )
+
+    object Settings :
+        Screen(
+            "settings",
+            R.string.title_settings,
+            R.drawable.ic_baseline_settings_24,
+            R.drawable.ic_outline_settings_24,
+            iconContentDescription = "Settings gear icon"
+        )
+
+    object BillView : Screen("billView", R.string.title_bill, null, null, null)
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun MainContent() {
+    val navController = rememberNavController()
+
+    Scaffold(
+        bottomBar = { NavBar(navController = navController) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.PayBill.route,
+            Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Analytics.route) {
+                AnalyticsContent()
+            }
+            composable(Screen.PayBill.route) {
+                PayContent(navController)
+            }
+            composable(Screen.Settings.route) {
+                SettingsContent()
+            }
+            composable(Screen.BillView.route) {
+                BillView()
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun NavBar(navController: NavController = rememberNavController()) {
+    val items = listOf(
+        Screen.Analytics,
+        Screen.PayBill,
+        Screen.Settings
+    )
+    QuickBillTheme {
+        NavigationBar {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            items.forEach() { screen ->
+                val selected =
+                    currentDestination?.hierarchy?.any { it.route == screen.route } == true
+
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = if (selected) screen.filledIconId!! else screen.outlinedIconId!!),
+                            contentDescription = screen.iconContentDescription,
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    },
+                    label = { Text(stringResource(id = screen.resourceId)) },
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+//todo: might not be needed?
+@Preview
+@Composable
+fun Header(navController: NavController = rememberNavController()) {
+    QuickBillTheme {
+        SmallTopAppBar(
+            title = { Text(text = "asd") },
+            colors = TopAppBarDefaults.smallTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                titleContentColor = MaterialTheme.colorScheme.onBackground
+            )
+        )
+    }
+}
+

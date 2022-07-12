@@ -9,9 +9,9 @@ import com.example.quickbill.api.API
 
 class BillViewModel : ViewModel() {
 
-    private val _bill: Bill? = API.instance.bill
+    private val _order: Order? = API.instance.order
 
-    private val _items = _bill?.lineItems?.toMutableStateList()
+    private val _items = _order?.lineItems?.toMutableStateList()
     private val _totalCost = mutableStateOf(0)
 
     val items: SnapshotStateList<OrderItem>? get() = _items
@@ -20,14 +20,14 @@ class BillViewModel : ViewModel() {
     fun itemSelected(item: OrderItem, selected: Boolean) {
         item.selected = selected
         if (selected) {
-            _totalCost.value += item.totalMoney.amount.toInt()
+            _totalCost.value += item.totalMoney.amount
         } else {
-            _totalCost.value -= item.totalMoney.amount.toInt()
+            _totalCost.value -= item.totalMoney.amount
         }
     }
 
     fun billTotal(): Int {
-        return _items?.sumOf { orderItem -> orderItem.totalMoney.amount.toInt() } ?: 0
+        return _items?.sumOf { orderItem -> orderItem.totalMoney.amount } ?: 0
     }
 }
 
