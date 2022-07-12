@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                 MainContent()
             }
         }
-        FirebaseManager.instance.initialize(this)
+        FirebaseManager.initialize(this)
 
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
