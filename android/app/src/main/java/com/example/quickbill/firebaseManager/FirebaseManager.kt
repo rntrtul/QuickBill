@@ -60,7 +60,7 @@ class FirebaseManager {
         db = FirebaseFirestore.getInstance()
     }
 
-    fun getCalories(item: OrderItem): NutritionInfo? {
+    fun getNutrition(item: OrderItem): NutritionInfo? {
         // May also add variant name
         val query_url = baseURL + "nutrition?query="+item.name;
         var response: Response? = null
@@ -125,8 +125,9 @@ class FirebaseManager {
                     failed = 1
                 }
 
-            // Add to the calories collection
+            // Add to the nutrition collection
             val foodItem: HashMap<String, Any> = HashMap()
+            foodItem.put("userId",0)
             foodItem.put("date", infoDeser.date)
             foodItem.put("foodName", item.name)
             try {
@@ -134,8 +135,20 @@ class FirebaseManager {
             } catch(e: Exception) {
                 foodItem.put("foodVariantName", "")
             }
-            foodItem.put("calories", getCalories(item))
+//            foodItem.put("calories", getNutrition(item))
 
+            db!!.collection("testNutrition")
+                .add(foodItem)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(
+                        TAG,
+                        "Food item added with ID: " + documentReference.id
+                    )
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    failed = 1
+                }
         }
         return failed==0
     }
