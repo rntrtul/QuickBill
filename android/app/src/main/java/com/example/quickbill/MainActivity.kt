@@ -1,5 +1,7 @@
 package com.example.quickbill
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -36,6 +39,10 @@ import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
@@ -44,7 +51,6 @@ import sqip.CardEntryActivityResult
 
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +64,15 @@ class MainActivity : AppCompatActivity() {
 
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
+
+
+    }
+
+    fun logOut() {
+        Firebase.auth.signOut()
+        val intent= Intent(this, SignInActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     // TODO: move to utils - should really have a separate screen (this is only for demo)
@@ -142,7 +157,6 @@ sealed class Screen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 fun MainContent() {
     val navController = rememberNavController()
@@ -227,6 +241,19 @@ fun Header(navController: NavController = rememberNavController()) {
                 titleContentColor = MaterialTheme.colorScheme.onBackground
             )
         )
+    }
+}
+
+fun Context.logOut() {
+    when (this) {
+        is AppCompatActivity -> {
+            Firebase.auth.signOut()
+            val intent = Intent(this, SignInActivity::class.java)
+            startActivity(intent)
+            finish()
+        };
+        is ContextWrapper -> baseContext.logOut()
+        else -> null
     }
 }
 
