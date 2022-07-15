@@ -157,11 +157,11 @@ class API {
             Log.d("API", "Response: $response")
             if (response.isSuccessful) {
                 Log.d("API", "Response successful!!")
-                var addedToDb = FirebaseManager.addOrderToFirebase(response)
-                if (addedToDb) {
-                    Log.d("FirebaseManager","Successfully added to db")
-                    return true
-                }
+//                var addedToDb = FirebaseManager.addOrderToFirebase(response)
+//                if (addedToDb) {
+//                    Log.d("FirebaseManager","Successfully added to db")
+//                    return true
+//                }
             }
 
         } catch (e: IOException) {
