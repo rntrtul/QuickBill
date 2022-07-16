@@ -8,7 +8,11 @@ import com.example.quickbill.ui.pay.Payment
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.*
+import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -41,13 +45,15 @@ class FirebaseManager {
     companion object {
         private var db: FirebaseFirestore? = null
         private var TAG = "FirebaseManager"
-        private var mFirebaseAnalytics: FirebaseAnalytics? = null
         private val baseURL = "https://api.calorieninjas.com/v1/"
         private var api_key = "redacted"
         private var mOrderItems: ArrayList<OrderItem> = ArrayList() // TODO: change type of object from OrderItem to something else
         private var mNutritionItems: ArrayList<NutritionInfo> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
+        private var auth: FirebaseAuth = Firebase.auth
+
+        // to reference currently signed user - auth.currentUser
 
 
         // TODO : make a separate listener that listens for changes. Return the arraylist only
@@ -204,13 +210,13 @@ class FirebaseManager {
             return failed==0
         }
 
+        fun getAuth(): FirebaseAuth {
+            return auth
+        }
 
 
-        fun initialize(mainActivity: MainActivity) {
 
-            // Obtain the FirebaseAnalytics instance
-            mFirebaseAnalytics = FirebaseAnalytics.getInstance(mainActivity);
-
+        fun initialize() {
             //Obtain Firestore
             db = FirebaseFirestore.getInstance()
         }

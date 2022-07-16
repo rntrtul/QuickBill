@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -27,20 +28,19 @@ import com.google.firebase.ktx.Firebase
 
 
 class SignInActivity: AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        auth = Firebase.auth
         setContent{
             QuickBillTheme {
                 SignInContent()
             }
         }
+        FirebaseManager.initialize()
     }
 
     override fun onStart() {
         super.onStart()
-        val currentUser = auth.currentUser
+        val currentUser = FirebaseManager.getAuth().currentUser
         if(currentUser != null){
             reload()
         }
@@ -48,7 +48,7 @@ class SignInActivity: AppCompatActivity() {
 
     private fun sendEmailVerification() {
         // [START send_email_verification]
-        val user = auth.currentUser!!
+        val user = FirebaseManager.getAuth().currentUser!!
         user.sendEmailVerification()
             .addOnCompleteListener(this) { task ->
                 // Email Verification sent
@@ -57,12 +57,12 @@ class SignInActivity: AppCompatActivity() {
     }
 
     private fun signIn(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password)
+        FirebaseManager.getAuth().signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithEmail:success")
-                    val user = auth.currentUser
+                    val user = FirebaseManager.getAuth().currentUser
                     updateUI(user)
 
                 } else {
@@ -91,7 +91,7 @@ class SignInActivity: AppCompatActivity() {
     }
 
     private fun reload() {
-        auth.signOut()
+        FirebaseManager.getAuth().signOut()
         finish()
         startActivity(getIntent())
     }

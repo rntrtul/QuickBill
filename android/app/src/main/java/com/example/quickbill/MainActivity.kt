@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 MainContent()
             }
         }
-        FirebaseManager.initialize(this)
+
 
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
@@ -68,12 +68,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun logOut() {
-        Firebase.auth.signOut()
-        val intent= Intent(this, SignInActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
 
     // TODO: move to utils - should really have a separate screen (this is only for demo)
     fun handleShowPaymentSuccessful() {
@@ -247,7 +241,7 @@ fun Header(navController: NavController = rememberNavController()) {
 fun Context.logOut() {
     when (this) {
         is AppCompatActivity -> {
-            Firebase.auth.signOut()
+            FirebaseManager.getAuth().signOut()
             val intent = Intent(this, SignInActivity::class.java)
             startActivity(intent)
             finish()

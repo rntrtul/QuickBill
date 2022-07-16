@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -25,10 +26,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class SignUpActivity: AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        auth = Firebase.auth
         setContent{
             QuickBillTheme {
                 SignUpContent()
@@ -38,7 +37,7 @@ class SignUpActivity: AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val currentUser = auth.currentUser
+        val currentUser = FirebaseManager.getAuth().currentUser
         if(currentUser != null){
             reload()
 
@@ -46,12 +45,12 @@ class SignUpActivity: AppCompatActivity() {
     }
     private fun createAccount(email: String, password: String) {
         // [START create_user_with_email]
-        auth.createUserWithEmailAndPassword(email, password)
+        FirebaseManager.getAuth().createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(SignUpActivity.TAG, "createUserWithEmail:success")
-                    val user = auth.currentUser
+                    val user = FirebaseManager.getAuth().currentUser
                     updateUI(user)
 
                 } else {
