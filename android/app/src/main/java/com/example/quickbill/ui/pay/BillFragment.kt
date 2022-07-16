@@ -39,11 +39,12 @@ fun BillView(billViewModel: BillViewModel = viewModel()) {
                 BillList(
                     list = billViewModel.items,
                     onSelectItem = { item, selected ->
-                        billViewModel.itemSelected(
-                            item,
-                            selected
-                        )
-                    })
+                        billViewModel.itemSelected(item, selected)
+                    },
+                    onQuantityChange = { item, quantitySelected ->
+                        billViewModel.itemQuantityChosen(item, quantitySelected)
+                    },
+                )
             }
             Text(
                 modifier = Modifier
@@ -54,7 +55,7 @@ fun BillView(billViewModel: BillViewModel = viewModel()) {
                 style = MaterialTheme.typography.titleMedium
             )
             Box(modifier = Modifier.align(Alignment.End)) {
-                PayBillButton(billViewModel)
+                PayBillButton(billViewModel.paymentTotal)
             }
         }
     }
@@ -90,7 +91,9 @@ fun RestaurantInfo(
 
 @Composable
 fun BillList(
-    list: List<OrderItem>, onSelectItem: (OrderItem, Boolean) -> Unit
+    list: List<BillItem>,
+    onSelectItem: (BillItem, Boolean) -> Unit,
+    onQuantityChange: (BillItem, Int) -> Unit,
 ) {
     Column(
         Modifier.verticalScroll(
@@ -98,13 +101,16 @@ fun BillList(
         )
     ) {
         for (item in list) {
-            BillItem(
-                itemName = item.name,
-                itemCost = item.totalMoney,
-                itemSelected = item.chosen,
+            LineItem(
+                itemName = item.order.name,
+                itemCost = item.order.basePriceMoney,
+                itemSelected = item.selected,
                 itemAlreadyPaid = item.alreadyPaid,
-                itemQuantity = item.quantity,
-                onSelectItem = { checked -> onSelectItem(item, checked) }
+                itemQuantity = item.order.quantity,
+                quantitySelected = item.quantitySelected,
+                lineCost = item.order.totalMoney,
+                onSelectItem = { checked -> onSelectItem(item, checked) },
+                onQuantityChange = { quantity -> onQuantityChange(item, quantity) }
             )
         }
     }
@@ -113,13 +119,16 @@ fun BillList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun BillItem(
+fun LineItem(
     itemName: String = "Sushi",
     itemCost: Money = Money(2005, "CAD"),
     itemSelected: Boolean = false,
     itemAlreadyPaid: Boolean = false,
     itemQuantity: Int = 2,
-    onSelectItem: (Boolean) -> Unit = {}
+    quantitySelected: Int = 1,
+    lineCost : Money = Money(4010, "CAD"),
+    onSelectItem: (Boolean) -> Unit = {},
+    onQuantityChange: (Int) -> Unit = {}
 ) {
 //    style = TextStyle(textDecoration = TextDecoration.LineThrough)
     val textColor: Color =
@@ -149,7 +158,7 @@ fun BillItem(
                     )
                 }
                 Text(
-                    text = centsToDisplayedAmount(itemCost.amount * itemQuantity),
+                    text = lineCost.displayAmount(),
                     color = textColor,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(end = 8.dp)
@@ -168,7 +177,11 @@ fun BillItem(
                         color = textColor,
                         style = MaterialTheme.typography.bodyLarge,
                     )
-                    QuantitySelector(itemQuantity = itemQuantity)
+                    QuantitySelector(
+                        itemQuantity = itemQuantity,
+                        quantitySelected = quantitySelected,
+                        onQuantityChange = onQuantityChange
+                    )
                 }
             }
         }
@@ -177,26 +190,29 @@ fun BillItem(
 
 @Preview
 @Composable
-fun PayBillButton(billViewModel: BillViewModel = viewModel()) {
+fun PayBillButton(
+    paymentTotal: Int = 100
+) {
     val context = LocalContext.current
-
-    Button(
-        modifier = Modifier
-            .padding(8.dp, top = 16.dp),
-        enabled = billViewModel.paymentTotal() != 0,
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        onClick = {
-            API.instance.amountToPay = billViewModel.paymentTotal()
-            CardEntry.startCardEntryActivity(
-                context.getActivity()!!, true,
-                DEFAULT_CARD_ENTRY_REQUEST_CODE
+    QuickBillTheme {
+        Button(
+            modifier = Modifier
+                .padding(8.dp, top = 16.dp),
+            enabled = paymentTotal != 0,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            onClick = {
+                API.instance.amountToPay = paymentTotal
+                CardEntry.startCardEntryActivity(
+                    context.getActivity()!!, true,
+                    DEFAULT_CARD_ENTRY_REQUEST_CODE
+                )
+            }) {
+            Text(
+                text = "Pay ${centsToDisplayedAmount(paymentTotal)}",
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = MaterialTheme.typography.titleMedium
             )
-        }) {
-        Text(
-            text = "Pay ${centsToDisplayedAmount(billViewModel.paymentTotal())}",
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            style = MaterialTheme.typography.titleMedium
-        )
+        }
     }
 }
 
@@ -204,10 +220,11 @@ fun PayBillButton(billViewModel: BillViewModel = viewModel()) {
 @Preview
 @Composable
 fun QuantitySelector(
-    itemQuantity: Int = 2
+    itemQuantity: Int = 2,
+    quantitySelected: Int = 1,
+    onQuantityChange: (Int) -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var numChosen by remember { mutableStateOf(itemQuantity) }
 
     QuickBillTheme {
         Box(modifier = Modifier.padding(start = 32.dp)) {
@@ -221,7 +238,7 @@ fun QuantitySelector(
                 ) {
                     IconButton(onClick = {
                         expanded = false
-                        numChosen = max(numChosen - 1, 1)
+                        onQuantityChange(max(quantitySelected - 1, 1))
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_remove_24),
@@ -230,11 +247,11 @@ fun QuantitySelector(
                         )
                     }
                     OutlinedButton(onClick = { expanded = true }) {
-                        Text(text = numChosen.toString())
+                        Text(text = quantitySelected.toString())
                     }
                     IconButton(onClick = {
                         expanded = false
-                        numChosen = min(numChosen + 1, itemQuantity)
+                        onQuantityChange(min(quantitySelected + 1, itemQuantity))
                     }) {
                         Icon(Icons.Filled.Add, "Add item to pay for")
                     }
@@ -248,7 +265,7 @@ fun QuantitySelector(
                         DropdownMenuItem(
                             text = { Text(text = "$i") },
                             onClick = {
-                                numChosen = i
+                                onQuantityChange(i)
                                 expanded = false
                             })
                     }

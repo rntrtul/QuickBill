@@ -24,7 +24,7 @@ data class Payment(
 )
 
 data class Money(
-    val amount: Int,
+    var amount: Int,
     val currency: String
 ) {
     fun displayAmount(): String {
@@ -32,15 +32,26 @@ data class Money(
     }
 }
 
-// default values due to: https://github.com/google/gson/issues/513
-// mutable is null when mixed default values
-class OrderItem(
-    val name: String = "",
-    val quantity: Int = 0,
-    val variationName: String = "",
-    val totalMoney: Money = Money(0, ""),
-    val alreadyPaid: Boolean = false,
-    initialSelected: Boolean = false
+data class OrderItem(
+    val name: String,
+    val quantity: Int,
+    val variationName: String,
+    val totalMoney: Money,
+    val basePriceMoney: Money,
+)
+
+class BillItem(
+    val order: OrderItem,
+    var alreadyPaid: Boolean = false,
+    initialSelected: Boolean = false,
+    initialQuantitySelected: Int = 1,
+    initialAmountPaying: Money = Money(0, ""),
 ) {
     var selected by mutableStateOf(initialSelected)
+    var quantitySelected by mutableStateOf(initialQuantitySelected)
+    var amountPaying by mutableStateOf(initialAmountPaying)
+
+    init {
+        amountPaying.amount = quantitySelected * order.basePriceMoney.amount
+    }
 }

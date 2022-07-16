@@ -1,6 +1,10 @@
 package com.example.quickbill.ui.pay
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import com.example.quickbill.api.API
@@ -10,29 +14,50 @@ class BillViewModel : ViewModel() {
 
     private val _order: Order? = API.instance.order
     private val _items = _order?.lineItems?.toMutableStateList()
+    private val _billItems = billFromOrder()
+    private var _paymentTotal by mutableStateOf(0)
 
-    val items: List<OrderItem> get() = _items!!
+    val items: List<BillItem> get() = _billItems
+    val paymentTotal get() = _paymentTotal
 
-    fun itemSelected(item: OrderItem, selected: Boolean) {
-        items.find { it.name == item.name }?.let { it ->
-            it.chosen = selected
-            Log.d("BILLVIEWMODEL", it.toString())
+    private fun billFromOrder(): SnapshotStateList<BillItem> {
+        val a = _items?.map { orderItem ->
+            BillItem(
+                order = orderItem,
+                initialQuantitySelected = orderItem.quantity
+            )
+        }
+
+        return a!!.toMutableStateList()
+    }
+
+    private fun calcPaymentTotal() {
+        _paymentTotal = selectedItems().sumOf { billItem ->
+            billItem.amountPaying.amount
         }
     }
 
-    fun selectedItems(): List<OrderItem> {
-        return _items?.filter { item -> item.chosen }!!
+    fun itemSelected(item: BillItem, selected: Boolean) {
+        _billItems.find { it.order.name == item.order.name }?.let { it ->
+            it.selected = selected
+            calcPaymentTotal()
+        }
     }
 
-    fun paymentTotal(): Int {
-        return selectedItems().sumOf { orderItem ->
-            if (orderItem.chosen) orderItem.totalMoney.amount else 0
+    fun itemQuantityChosen(item: BillItem, quantity: Int) {
+        _billItems.find { it.order.name == item.order.name }?.let { it ->
+            it.quantitySelected = quantity
+            it.amountPaying.amount = it.quantitySelected * it.order.basePriceMoney.amount
+            calcPaymentTotal()
+            Log.d("BILLVM", "${it.amountPaying} $quantity")
         }
+    }
+
+    fun selectedItems(): List<BillItem> {
+        return _billItems.filter { item -> item.selected }
     }
 
     fun billTotal(): Int {
         return _order!!.totalMoney.amount
     }
 }
-
-
