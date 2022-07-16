@@ -45,6 +45,8 @@ class AnalyticsFragment : Fragment() {
 
 @Composable
 fun AnalyticsContent() {
+    // May want to use a recycler view if we show a table
+
     val analyticsViewModel: AnalyticsViewModel = viewModel()
     QuickBillTheme {
 

@@ -1,5 +1,8 @@
 package com.example.quickbill.ui.pay
 
+import java.util.*
+import kotlin.collections.ArrayList
+
 data class Order(
     val id: String,
     val locationId: String,
@@ -16,6 +19,8 @@ data class Payment(
     val sourceType: String,
     val locationId: String,
     val orderId: String,
+    var lineItems: ArrayList<OrderItem>,
+    var date: Date,
 )
 
 data class Money(

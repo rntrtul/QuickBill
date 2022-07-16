@@ -3,6 +3,7 @@ package com.example.quickbill.api
 
 import android.util.Log
 import com.example.quickbill.ui.pay.Order
+import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.pay.Payment
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -156,7 +157,11 @@ class API {
             Log.d("API", "Response: $response")
             if (response.isSuccessful) {
                 Log.d("API", "Response successful!!")
-                return true
+//                var addedToDb = FirebaseManager.addOrderToFirebase(response)
+//                if (addedToDb) {
+//                    Log.d("FirebaseManager","Successfully added to db")
+//                    return true
+//                }
             }
 
         } catch (e: IOException) {

@@ -17,14 +17,22 @@
             android:name="sqip.SQUARE_APPLICATION_ID"
             android:value="sandbox-sq0idb-WJLNDmDDD4QzAkmtHqBA3w"/>
         <activity
-            android:name=".MainActivity"
+            android:name=".SignUpActivity"
+            android:exported="false"
+            android:label="@string/sign_up">
+        </activity>
+        <activity android:name=".SignInActivity"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/sign_in">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="@string/app_name">
         </activity>
         <meta-data
             android:name="sqip.SQUARE_APPLICATION_ID"
