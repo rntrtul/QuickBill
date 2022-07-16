@@ -3,6 +3,7 @@ package com.example.quickbill.ui.pay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.quickbill.util.centsToDisplayedAmount
 
 data class Order(
     val id: String,
@@ -25,7 +26,11 @@ data class Payment(
 data class Money(
     val amount: Int,
     val currency: String
-)
+) {
+    fun displayAmount(): String {
+        return centsToDisplayedAmount(amount)
+    }
+}
 
 // default values due to: https://github.com/google/gson/issues/513
 // mutable is null when mixed default values

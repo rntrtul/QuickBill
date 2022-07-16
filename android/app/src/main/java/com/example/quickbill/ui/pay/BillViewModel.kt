@@ -15,23 +15,23 @@ class BillViewModel : ViewModel() {
 
     fun itemSelected(item: OrderItem, selected: Boolean) {
         items.find { it.name == item.name }?.let { it ->
-            it.selected = selected
+            it.chosen = selected
             Log.d("BILLVIEWMODEL", it.toString())
         }
     }
 
-    fun paymentTotal(): Int {
-        return _items?.sumOf { orderItem ->
-            if (orderItem.selected) orderItem.totalMoney.amount else 0
-        } ?: 0
+    fun selectedItems(): List<OrderItem> {
+        return _items?.filter { item -> item.chosen }!!
     }
 
-    fun selectedItems(): List<OrderItem> {
-        return _items?.filter { item -> item.selected }!!
+    fun paymentTotal(): Int {
+        return selectedItems().sumOf { orderItem ->
+            if (orderItem.chosen) orderItem.totalMoney.amount else 0
+        }
     }
 
     fun billTotal(): Int {
-        return _items?.sumOf { orderItem -> orderItem.totalMoney.amount } ?: 0
+        return _order!!.totalMoney.amount
     }
 }
 
