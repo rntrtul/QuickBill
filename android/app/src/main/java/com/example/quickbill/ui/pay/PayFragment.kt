@@ -35,23 +35,30 @@ fun PayContent(navController: NavController = rememberNavController()) {
         contract = ScanContract(),
         onResult = { result ->
             payViewModel.processQrResult(result)
-            if (payViewModel.scanSuccessful) {
-                navController.navigate(Screen.BillView.route)
-            } else {
-                Toast.makeText(
-                    context,
-                    "QR code is invalid. Please contact the restaurant owner.",
-                    Toast.LENGTH_LONG
-                ).show()
-                API.instance.invalidateLocationAndTableNum()
+
+            if (!payViewModel.scanValid) {
                 navController.navigate(Screen.PayBill.route)
+            } else {
+                if (payViewModel.scanSuccessful) {
+                    navController.navigate(Screen.BillView.route)
+                } else {
+                    Toast.makeText(
+                        context,
+                        "QR code is invalid. Please contact the restaurant owner.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    API.instance.invalidateLocationAndTableNum()
+                    navController.navigate(Screen.PayBill.route)
+                }
             }
         }
     )
 
     QuickBillTheme {
         Column(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

@@ -1,8 +1,5 @@
 package com.example.quickbill.ui.pay
 
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,48 +21,23 @@ import sqip.CardEntry.DEFAULT_CARD_ENTRY_REQUEST_CODE
 
 @Preview
 @Composable
-fun BillView() {
-    val tableNum = API.instance.tableNum!!
-    val restaurantName: String = API.instance.restaurantName!!
-
-    val billViewModel: BillViewModel = viewModel()
-    val context = LocalContext.current
+fun BillView(billViewModel: BillViewModel = viewModel()) {
+    val tableNum = API.instance.tableNum ?: 9
+    val restaurantName: String = API.instance.restaurantName ?: "KRUST"
 
     QuickBillTheme {
         Column {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp, top = 12.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = restaurantName,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.displaySmall,
-                )
-                Text(
-                    text = "Table #$tableNum",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            RestaurantInfo(restaurantName, tableNum)
 
-            Box(
-                Modifier
-                    .fillMaxWidth()
-            ) {
-                billViewModel.items?.let {
-                    BillList(
-                        it,
-                        onSelectItem = { item, selected ->
-                            billViewModel.itemSelected(
-                                item,
-                                selected
-                            )
-                        })
-                }
+            Box(Modifier.fillMaxWidth()) {
+                BillList(
+                    list = billViewModel.items,
+                    onSelectItem = { item, selected ->
+                        billViewModel.itemSelected(
+                            item,
+                            selected
+                        )
+                    })
             }
             Text(
                 modifier = Modifier
@@ -75,26 +47,36 @@ fun BillView() {
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium
             )
-            Button(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(8.dp, top = 16.dp),
-                enabled = billViewModel.totalCost != 0,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                onClick = {
-                    API.instance.amountToPay = billViewModel.totalCost
-                    CardEntry.startCardEntryActivity(
-                        context.getActivity()!!, true,
-                        DEFAULT_CARD_ENTRY_REQUEST_CODE
-                    )
-                }) {
-                Text(
-                    text = "Pay ${centsToDisplayedAmount(billViewModel.totalCost)}",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    style = MaterialTheme.typography.titleMedium
-                )
+            Box(modifier = Modifier.align(Alignment.End)) {
+                PayBillButton(billViewModel)
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun RestaurantInfo(
+    restaurantName: String = "Krust Krab",
+    tableNum: Int = 1
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, top = 24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = restaurantName,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.displaySmall,
+        )
+        Text(
+            text = "Table #$tableNum",
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 
@@ -108,7 +90,13 @@ fun BillList(
         )
     ) {
         for (item in list) {
-            BillItem(item, onSelectItem)
+            BillItem(
+                itemName = item.name,
+                itemCost = item.totalMoney,
+                itemSelected = item.selected,
+                itemAlreadyPaid = item.alreadyPaid,
+                onSelectItem = { checked -> onSelectItem(item, checked) }
+            )
         }
     }
 }
@@ -117,11 +105,15 @@ fun BillList(
 @Preview
 @Composable
 fun BillItem(
-    item: OrderItem = OrderItem("Sushi", "2", "", Money(2005, "CAD")),
-    onSelectItem: (OrderItem, Boolean) -> Unit = { _, _ -> }
+    itemName: String = "Sushi",
+    itemCost: Money = Money(2005, "CAD"),
+    itemSelected: Boolean = false,
+    itemAlreadyPaid: Boolean = false,
+    onSelectItem: (Boolean) -> Unit = {}
 ) {
+//    style = TextStyle(textDecoration = TextDecoration.LineThrough)
     val textColor: Color =
-        if (item.alreadyPayed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+        if (itemAlreadyPaid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
 
     QuickBillTheme {
         Row(
@@ -136,24 +128,47 @@ fun BillItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Checkbox(
-                    checked = item.selected,
-                    onCheckedChange = { onSelectItem(item, it) },
-                    enabled = !(item.alreadyPayed)
+                    checked = itemSelected,
+                    onCheckedChange = onSelectItem,
+                    enabled = !(itemAlreadyPaid)
                 )
                 Text(
-                    text = item.name,
+                    text = itemName,
                     color = textColor,
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
-
             Text(
-                text = centsToDisplayedAmount(item.totalMoney.amount),
+                text = centsToDisplayedAmount(itemCost.amount),
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )
-
         }
+    }
+}
+
+@Preview
+@Composable
+fun PayBillButton(billViewModel: BillViewModel = viewModel()) {
+    val context = LocalContext.current
+
+    Button(
+        modifier = Modifier
+            .padding(8.dp, top = 16.dp),
+        enabled = billViewModel.paymentTotal() != 0,
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        onClick = {
+            API.instance.amountToPay = billViewModel.paymentTotal()
+            CardEntry.startCardEntryActivity(
+                context.getActivity()!!, true,
+                DEFAULT_CARD_ENTRY_REQUEST_CODE
+            )
+        }) {
+        Text(
+            text = "Pay ${centsToDisplayedAmount(billViewModel.paymentTotal())}",
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }

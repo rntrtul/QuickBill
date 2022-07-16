@@ -10,14 +10,21 @@ import com.journeyapps.barcodescanner.ScanIntentResult
 class PayViewModel : ViewModel() {
 
     private var _scanSuccessful = false
+    private var _scanValid = true
     private val _text = MutableLiveData<String>().apply {
         value = "This is pay Fragment"
     }
     val text: LiveData<String> = _text
     val scanSuccessful get() = _scanSuccessful
+    val scanValid get() = _scanValid
 
     fun processQrResult(result: ScanIntentResult) {
         val TAG = "PayFragment - processQrResult()"
+
+        _scanValid = result.contents != null
+        if (!_scanValid) {
+            return
+        }
         val contents = result.contents!!
 
         val scanTokens = contents.split('-')

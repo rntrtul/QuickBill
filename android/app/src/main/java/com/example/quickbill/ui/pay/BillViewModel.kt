@@ -1,7 +1,6 @@
 package com.example.quickbill.ui.pay
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import android.util.Log
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import com.example.quickbill.api.API
@@ -10,20 +9,25 @@ import com.example.quickbill.api.API
 class BillViewModel : ViewModel() {
 
     private val _order: Order? = API.instance.order
-
     private val _items = _order?.lineItems?.toMutableStateList()
-    private val _totalCost = mutableStateOf(0)
 
-    val items: SnapshotStateList<OrderItem>? get() = _items
-    val totalCost: Int get() = _totalCost.value
+    val items: List<OrderItem> get() = _items!!
 
     fun itemSelected(item: OrderItem, selected: Boolean) {
-        item.selected = selected
-        if (selected) {
-            _totalCost.value += item.totalMoney.amount
-        } else {
-            _totalCost.value -= item.totalMoney.amount
+        items.find { it.name == item.name }?.let { it ->
+            it.selected = selected
+            Log.d("BILLVIEWMODEL", it.toString())
         }
+    }
+
+    fun paymentTotal(): Int {
+        return _items?.sumOf { orderItem ->
+            if (orderItem.selected) orderItem.totalMoney.amount else 0
+        } ?: 0
+    }
+
+    fun selectedItems(): List<OrderItem> {
+        return _items?.filter { item -> item.selected }!!
     }
 
     fun billTotal(): Int {
