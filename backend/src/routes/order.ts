@@ -27,7 +27,7 @@ router.post("/example/table/:tableId", async (req: Request, res: Response) => {
             itemType: "ITEM",
           },
           {
-            quantity: "1",
+            quantity: "3",
             catalogObjectId: "IYRQZRWFEPUPDZLGFXYHE7VQ",
             itemType: "ITEM",
           },
