@@ -8,11 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 fun centsToDisplayedAmount(amount: Int): String {
     val dollars = amount / 100
     val cents = amount % 100
-    return if (cents < 10) {
-        "$${dollars}.0${cents}"
-    } else {
-        "$${dollars}.${cents}"
-    }
+
+    return if (cents < 10) "$$dollars.0$cents" else "$$dollars.$cents"
 }
 
 fun Context.getActivity(): AppCompatActivity? = when (this) {
