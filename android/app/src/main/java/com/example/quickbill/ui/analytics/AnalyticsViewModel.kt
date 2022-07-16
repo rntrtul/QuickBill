@@ -3,11 +3,15 @@ package com.example.quickbill.ui.analytics
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.quickbill.firebaseManager.FirebaseManager
 
 class AnalyticsViewModel : ViewModel() {
 
-    private val _text = MutableLiveData<String>().apply {
-        value = "This is analytics Fragment"
+    fun getOrderData() {
+        FirebaseManager.getData("testOrders")
     }
-    val text: LiveData<String> = _text
+
+    fun getNutritionData() {
+        FirebaseManager.getData("testNutrition")
+    }
 }

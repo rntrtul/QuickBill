@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.quickbill.util.centsToDisplayedAmount
+import java.util.*
+import kotlin.collections.ArrayList
 
 data class Order(
     val id: String,
@@ -21,6 +23,8 @@ data class Payment(
     val sourceType: String,
     val locationId: String,
     val orderId: String,
+    var lineItems: ArrayList<OrderItem>,
+    var date: Date,
 )
 
 data class Money(

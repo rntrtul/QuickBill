@@ -4,4 +4,6 @@
     <string name="title_pay">Pay Bill</string>
     <string name="title_settings">Settings</string>
     <string name="title_bill">Bill Items</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
 </resources>
