@@ -9,6 +9,8 @@ import com.example.quickbill.firebaseManager.FirebaseManager
 class AnalyticsViewModel : ViewModel() {
     val TAG = "AnalyticsViewModel"
 
+    val analyticCategories = listOf("Spending", "Nutrition")
+
     fun getOrderData() {
         FirebaseManager.getData("testOrders", object : FirebaseManager.MyCallback {
                 override fun onCallback(item: Map<String,Any>) {
