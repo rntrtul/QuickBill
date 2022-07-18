@@ -38,6 +38,7 @@ import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
 import com.example.quickbill.firebaseManager.FirebaseManager
+import com.example.quickbill.ui.pay.BillState
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -73,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     fun handleShowPaymentSuccessful() {
         val alertDialog = AlertDialog.Builder(this)
         alertDialog.setTitle("Payment Successful")
-        val order: Order? = API.instance.order
+        val order: Order? = BillState.instance.order
         val amountPaid = order?.totalMoney?.amount!!.toInt()
         alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
         alertDialog.setPositiveButton("Done") { dialog, _ ->

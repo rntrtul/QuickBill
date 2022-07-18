@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.quickbill.api.API
+import com.example.quickbill.util.ParsedQRCode
+import com.example.quickbill.util.parsedQRCodeFactory
 import com.journeyapps.barcodescanner.ScanIntentResult
 
 class PayViewModel : ViewModel() {
@@ -21,37 +23,19 @@ class PayViewModel : ViewModel() {
     fun processQrResult(result: ScanIntentResult) {
         val TAG = "PayFragment - processQrResult()"
 
-        _scanValid = result.contents != null
+        val parsedQRCode = parsedQRCodeFactory( result )
+        _scanValid = parsedQRCode != null
         if (!_scanValid) {
             return
         }
-        val contents = result.contents!!
-
-        val scanTokens = contents.split('-')
-        Log.d(TAG, "Scan Tokens: $scanTokens")
-
-        if (scanTokens.size != 3) {
-            Log.e(TAG, "Too many tokens in QR")
-            return
-        }
-
-        val locationId = scanTokens[0]
-
-        val tableNum = try {
-            Integer.parseInt(scanTokens[1])
-        } catch (exception: Exception) {
-            Log.e(TAG, "Could not parse table number!")
-            return
-        }
-
-        val restaurantName = scanTokens[2]
 
         // Set the location ID and table num (also requesting the bill from the API).
-        API.instance.setLocationAndTableNum(locationId, tableNum, restaurantName)
+        parsedQRCode!!.setBill( BillState.instance )
+        API.callBill( BillState.instance )
 
-        Log.d(TAG, "API instance Bill: " + API.instance.order)
+        Log.d(TAG, "API instance Bill: " + BillState.instance.order)
 
-        if (API.instance.order != null) {
+        if (BillState.instance.order != null) {
             _scanSuccessful = true
         } else {
             Log.e(TAG, "Bill was null!")

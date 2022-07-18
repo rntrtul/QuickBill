@@ -47,7 +47,7 @@ fun PayContent(navController: NavController = rememberNavController()) {
                         "QR code is invalid. Please contact the restaurant owner.",
                         Toast.LENGTH_LONG
                     ).show()
-                    API.instance.invalidateLocationAndTableNum()
+                    BillState.instance.reset()
                     navController.navigate(Screen.PayBill.route)
                 }
             }

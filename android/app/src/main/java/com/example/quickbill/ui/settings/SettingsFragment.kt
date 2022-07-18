@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.quickbill.MainActivity
 import com.example.quickbill.logOut
 import com.example.quickbill.ui.theme.QuickBillTheme
+import com.example.quickbill.util.generateQrCodePDF
 
 class SettingsFragment : Fragment() {
     override fun onCreateView(
@@ -57,6 +58,26 @@ fun SettingsContent() {
             text?.let {
                 Text(
                     text = it, color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            androidx.compose.material3.Button(
+                onClick = {
+                    // This is just an example. Need to do based on user input.
+                    generateQrCodePDF(
+                        context,
+                        listOf("Please scan the QR code below:", "Another string just as an example"),
+                        listOf("L3GAERGV19EXB-1-Cooked Goose", "L3GAERGV19EXB-1"),
+                        "genPdfPoc_" + System.currentTimeMillis() + ".pdf",
+                        true
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+            ) {
+                androidx.compose.material3.Text(
+                    text = "Generate my QR codes (for restaurant owners)",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
             androidx.compose.material3.Button(

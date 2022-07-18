@@ -30,12 +30,13 @@ import kotlin.collections.ArrayList
 @Preview
 @Composable
 fun BillView(billViewModel: BillViewModel = viewModel()) {
-    val tableNum = API.instance.tableNum!!
-    val restaurantName: String = API.instance.restaurantName!!
+    val tableNum = BillState.instance.tableNum!!
+    var restaurantName: String? = BillState.instance.restaurantName
+    if(restaurantName == null) restaurantName = BillState.instance.locationId
 
     QuickBillTheme {
         Column {
-            RestaurantInfo(restaurantName, tableNum)
+            RestaurantInfo(restaurantName!!, tableNum)
 
             Box(Modifier.fillMaxWidth()) {
                 BillList(
@@ -203,7 +204,7 @@ fun PayBillButton(
             enabled = paymentTotal != 0,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             onClick = {
-                API.instance.amountToPay = paymentTotal
+                BillState.instance.amountToPay = paymentTotal
                 CardEntry.startCardEntryActivity(
                     context.getActivity()!!, true,
                     DEFAULT_CARD_ENTRY_REQUEST_CODE
