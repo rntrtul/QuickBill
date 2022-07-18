@@ -8,11 +8,11 @@ import {
   PayOrderRequest,
 } from "square";
 import { v4 as uuidv4 } from "uuid";
+import firebase from "../firebase";
 
 import { ordersApi } from "../api/square";
 
 const router = express.Router();
-
 router.post("/example/table/:tableId", async (req: Request, res: Response) => {
   try {
     const { tableId } = req.params;
