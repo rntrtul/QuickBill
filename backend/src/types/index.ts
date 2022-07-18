@@ -1,12 +1,30 @@
-import { Money } from "square";
+import { Money, Order } from "square";
 
 export interface OrderItem {
-  item_id: String;
+  itemId: string;
   amount: Money;
-  quantity: Number;
+  quantity: number;
 }
 
-export interface UserOrders {
-  user_id: String;
-  items: OrderItem[];
+export interface UserOrder {
+  userId: string;
+  items?: OrderItem[];
+  amount?: Money;
+}
+
+export interface FirebaseOrder {
+  userOrders: UserOrder[];
+}
+
+export interface OrderMeta {
+  order?: Order;
+  userOrders?: UserOrder[];
+}
+
+export interface PaymentBody {
+  sourceId: string;
+  orderId: string;
+  idempotencyKey: string;
+  amountMoney: number;
+  userOrder: UserOrder;
 }
