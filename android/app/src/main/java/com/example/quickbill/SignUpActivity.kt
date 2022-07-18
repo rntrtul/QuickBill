@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,6 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -97,6 +101,7 @@ class SignUpActivity: AppCompatActivity() {
         val (password, onPasswordChange) = remember {
             mutableStateOf("")
         }
+        val focusManager = LocalFocusManager.current
         Column(modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
@@ -109,7 +114,7 @@ class SignUpActivity: AppCompatActivity() {
                     style = MaterialTheme.typography.displayMedium,
                     modifier = Modifier
                         .padding(28.dp),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             Column(
@@ -122,30 +127,42 @@ class SignUpActivity: AppCompatActivity() {
                 OutlinedTextField(
                     value = email,
                     onValueChange = onEmailChange,
-                    label = { Text(text = "Email", style = MaterialTheme.typography.labelLarge) },
+                    label = { Text(text = "Email", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primaryContainer),
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 21.dp),
-                    shape = MaterialTheme.shapes.medium
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus()}),
+                    shape = MaterialTheme.shapes.medium,
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = onPasswordChange,
-                    label = { Text(text = "Password",style = MaterialTheme.typography.labelLarge) },
+                    label = { Text(text = "Password", color = MaterialTheme.colorScheme.onPrimaryContainer) },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 21.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primaryContainer),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus()}),
                     visualTransformation = PasswordVisualTransformation(),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
                 )
                 Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { createAccount(email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(14.dp),
                 ) {
-                    Text(text = "Register",  style = MaterialTheme.typography.labelLarge)
+                    Text(text = "Register", color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
                 Row(
                     modifier = Modifier
@@ -153,11 +170,6 @@ class SignUpActivity: AppCompatActivity() {
                         .padding(top = 42.dp, start = 14.dp, end = 14.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Already have an Account?",
-                        modifier = Modifier
-                            .padding(top=29.dp) ,
-                        style = MaterialTheme.typography.labelLarge
-                    )
                     TextButton(
                         onClick = {
                             signIn()
@@ -165,7 +177,7 @@ class SignUpActivity: AppCompatActivity() {
                         modifier = Modifier
                             .padding(top=14.dp)
                     ) {
-                        Text(text = "Login",style = MaterialTheme.typography.labelLarge)
+                        Text(text = "Already have an Account? Login", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelLarge)
                     }
                 }
 

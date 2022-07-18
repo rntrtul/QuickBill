@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -59,7 +58,8 @@ fun SettingsContent() {
                     text = it, color = MaterialTheme.colorScheme.onBackground
                 )
             }
-            androidx.compose.material3.Button(
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 onClick = {
                     context.logOut()
                 },
@@ -67,9 +67,9 @@ fun SettingsContent() {
                     .fillMaxWidth()
                     .padding(14.dp),
             ) {
-                androidx.compose.material3.Text(
+                Text(
                     text = "Log out",
-                    style = MaterialTheme.typography.labelLarge
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
