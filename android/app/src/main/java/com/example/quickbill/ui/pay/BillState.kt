@@ -18,10 +18,11 @@ class BillState {
     var amountToPay = 0
     var order: Order? = null
 
-    // TODO: same as above, API should not have a state
     fun reset() {
         locationId = null
         tableNum = null
         restaurantName = null
+        amountToPay = 0
+        order = null
     }
 }

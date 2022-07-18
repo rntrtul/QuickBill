@@ -12,13 +12,13 @@ import java.io.IOException
 class CardEntryBackgroundHandler: CardNonceBackgroundHandler {
     override fun handleEnteredCardInBackground(cardDetails : CardDetails): CardEntryActivityCommand {
         try {
-            val payment: Payment? = API.instance.makePayment(cardDetails.nonce, BillState.instance)
+            val payment: Payment? = API.makePayment(cardDetails.nonce, BillState.instance)
             Log.d("NETWORK LOG", "--------------------------")
             Log.d("NETWORK LOG", payment.toString())
             Log.d("NETWORK LOG", "--------------------------")
 
             if (payment != null) {
-                val isOrderPaid: Boolean = API.instance.attachPaymentToOrder(payment)
+                val isOrderPaid: Boolean = API.attachPaymentToOrder(payment, BillState.instance)
             }
 
 
