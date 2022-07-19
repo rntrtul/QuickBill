@@ -64,7 +64,7 @@ fun PayContent(navController: NavController = rememberNavController()) {
         ) {
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                onClick = { scanLauncher.launch(ScanOptions()) }) {
+                onClick = { scanLauncher.launch(ScanOptions().setPrompt("Scan the QR code in the restaurant.")) }) {
                 Text(
                     text = "SCAN QR CODE",
                     color = MaterialTheme.colorScheme.onPrimaryContainer

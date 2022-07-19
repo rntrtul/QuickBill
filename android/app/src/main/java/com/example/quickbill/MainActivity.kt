@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
+import android.os.StrictMode
+import android.os.StrictMode.VmPolicy
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
@@ -20,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -28,22 +29,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
+import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.analytics.AnalyticsContent
+import com.example.quickbill.ui.pay.BillState
 import com.example.quickbill.ui.pay.BillView
 import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.ui.pay.PayContent
+import com.example.quickbill.ui.qr_code_manager.QRCodeCreatorContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
-import com.example.quickbill.firebaseManager.FirebaseManager
-import com.example.quickbill.ui.pay.BillState
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import sqip.Card
 import sqip.CardDetails
 import sqip.CardEntry
@@ -62,11 +58,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
 
-
+        // Code needed to be able to show the generated QR code file without doing any unnecessary work.
+        val builder = VmPolicy.Builder()
+        StrictMode.setVmPolicy(builder.build())
     }
 
 
@@ -148,7 +145,7 @@ sealed class Screen(
         )
 
     object BillView : Screen("billView", R.string.title_bill, null, null, null)
-
+    object QRCodeCreatorView : Screen("qrCodeCreatorView", R.string.qr_code_creator, null, null, null)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -174,10 +171,13 @@ fun MainContent() {
                 PayContent(navController)
             }
             composable(Screen.Settings.route) {
-                SettingsContent()
+                SettingsContent(navController)
             }
             composable(Screen.BillView.route) {
                 BillView()
+            }
+            composable(Screen.QRCodeCreatorView.route) {
+                QRCodeCreatorContent(navController)
             }
         }
     }

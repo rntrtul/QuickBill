@@ -5,8 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.quickbill.api.API
-import com.example.quickbill.util.ParsedQRCode
-import com.example.quickbill.util.parsedQRCodeFactory
+import com.example.quickbill.util.QRUtil
 import com.journeyapps.barcodescanner.ScanIntentResult
 
 class PayViewModel : ViewModel() {
@@ -23,7 +22,7 @@ class PayViewModel : ViewModel() {
     fun processQrResult(result: ScanIntentResult) {
         val TAG = "PayFragment - processQrResult()"
 
-        val parsedQRCode = parsedQRCodeFactory( result )
+        val parsedQRCode = QRUtil.parsedQRCodeFactory( result )
         _scanValid = parsedQRCode != null
         if (!_scanValid) {
             return
