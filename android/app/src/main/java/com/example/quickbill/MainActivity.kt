@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -31,14 +32,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
 import com.example.quickbill.ui.analytics.AnalyticsContent
-import com.example.quickbill.ui.pay.BillView
-import com.example.quickbill.ui.pay.Order
-import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
 import com.example.quickbill.firebaseManager.FirebaseManager
-import com.example.quickbill.ui.pay.BillState
+import com.example.quickbill.ui.pay.*
+import com.example.quickbill.util.handleCardEntryResult
+import com.example.quickbill.util.isCardEntryRequestCode
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -62,25 +62,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         val cardHandler = CardEntryBackgroundHandler()
         setCardNonceBackgroundHandler(cardHandler)
-
-
-    }
-
-
-    // TODO: move to utils - should really have a separate screen (this is only for demo)
-    fun handleShowPaymentSuccessful() {
-        val alertDialog = AlertDialog.Builder(this)
-        alertDialog.setTitle("Payment Successful")
-        val order: Order? = BillState.instance.order
-        val amountPaid = order?.totalMoney?.amount!!.toInt()
-        alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
-        alertDialog.setPositiveButton("Done") { dialog, _ ->
-            dialog.dismiss()
-        }
-        alertDialog.show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -90,22 +73,11 @@ class MainActivity : AppCompatActivity() {
             data
         ) // Ignore the fact that it's deprecated.
 
-        if (requestCode == 51789) {
+        if (isCardEntryRequestCode(requestCode)) {
             CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {
                 override fun onResult(result: CardEntryActivityResult) {
-                    if (result.isSuccess()) {
-                        Log.d("NOPE", "---------------------------------------")
-                        Log.d("NOPE", "-------------- SUCCESS ----------------")
-                        Log.d("NOPE", "---------------------------------------")
-                        val cardResult: CardDetails = result.getSuccessValue()
-                        val card: Card = cardResult.card
-                        val nonce = cardResult.nonce
-                        handleShowPaymentSuccessful()
-                    } else if (result.isCanceled()) {
-                        Log.d("NOPE", "---------------------------------------")
-                        Log.d("NOPE", "------------ NOT ALLOWED --------------")
-                        Log.d("NOPE", "---------------------------------------")
-                    }
+                    Log.d("NETWORK LOG", "Card Entry Result: $result")
+                    handleCardEntryResult(result)
                 }
             })
         }

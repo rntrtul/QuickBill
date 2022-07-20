@@ -16,13 +16,14 @@ class BillState {
     var tableNum: Int? = null
     var restaurantName: String? = null
     var amountToPay = 0
-    var order: Order? = null
+    var billResponse: BillResponse? = null
+    var billViewModel: BillViewModel? = null
 
     fun reset() {
         locationId = null
         tableNum = null
         restaurantName = null
         amountToPay = 0
-        order = null
+        billResponse = null
     }
 }
