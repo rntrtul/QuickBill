@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.quickbill.MainActivity
 import com.example.quickbill.R
 import com.example.quickbill.api.API
 import com.example.quickbill.ui.theme.QuickBillTheme
@@ -32,6 +33,7 @@ import kotlin.collections.ArrayList
 fun BillView(billViewModel: BillViewModel = viewModel()) {
     val tableNum = BillState.instance.tableNum!!
     var restaurantName: String? = BillState.instance.restaurantName
+    BillState.instance.billViewModel = billViewModel
     if(restaurantName == null) restaurantName = BillState.instance.locationId
 
     QuickBillTheme {
@@ -194,7 +196,8 @@ fun LineItem(
 @Preview
 @Composable
 fun PayBillButton(
-    paymentTotal: Int = 100
+    paymentTotal: Int = 100,
+    billViewModel: BillViewModel = viewModel()
 ) {
     val context = LocalContext.current
     QuickBillTheme {

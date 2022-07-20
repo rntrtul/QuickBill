@@ -4,6 +4,7 @@ package com.example.quickbill.api
 import android.util.Log
 import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.firebaseManager.FirebaseManager
+import com.example.quickbill.ui.pay.BillResponse
 import com.example.quickbill.ui.pay.BillState
 import com.example.quickbill.ui.pay.Payment
 import com.google.gson.Gson
@@ -37,6 +38,8 @@ class API {
                 try {
                     result =
                         URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum).readText()
+
+                    Log.d("API LOG", "got result: $result")
                 } catch (e: Exception) {
                     Log.e("API", "$e")
                     Log.e("API", "Error calling bill")
@@ -49,33 +52,17 @@ class API {
                 job.join() // wait until child coroutine completes
             }
             if (result != "") {
-                billState.order = Gson().fromJson(result, Order::class.java)
+                BillState.instance.billResponse = Gson().fromJson(result, BillResponse::class.java)
             }
         }
 
-        // TODO: orderId should be passed in
-        fun makePayment(nonce: String, billState: BillState): Payment? {
-            val payment_url = baseURL + "payment"
-            val orderId = billState.order?.id
-            val idempotencyKey: UUID = UUID.randomUUID() // Generates random UUID
-            val sourceId: String = nonce
-            val amount: Int = billState.amountToPay
-
-            val jsonObject = JSONObject()
-            try {
-                jsonObject.put("sourceId", sourceId)
-                jsonObject.put("orderId", orderId)
-                jsonObject.put("idempotencyKey", idempotencyKey.toString())
-                jsonObject.put("amountMoney", amount.toString())
-            } catch (e: JSONException) {
-                e.printStackTrace()
-            }
-
+        fun sendPaymentRequest(requestBody: JSONObject): Payment? {
+            val paymentURL = baseURL + "payment"
             val client = OkHttpClient()
             val mediaType = "application/json; charset=utf-8".toMediaType()
-            val body = jsonObject.toString().toRequestBody(mediaType)
+            val body = requestBody.toString().toRequestBody(mediaType)
             val request: Request = Request.Builder()
-                .url(payment_url)
+                .url(paymentURL)
                 .post(body)
                 .build()
 
@@ -83,63 +70,14 @@ class API {
             var payment: Payment? = null
             try {
                 response = client.newCall(request).execute()
+                Log.d("NETWORK LOG", "Response: $response")
                 payment = Gson().fromJson(response.body.string(), Payment::class.java)
-
             } catch (e: IOException) {
                 e.printStackTrace()
             }
 
             return payment
         }
-
-        // TODO: orderId should be passed in
-        fun attachPaymentToOrder(payment: Payment, billState: BillState): Boolean {
-            if (billState.order?.id == null) {
-                return false
-            }
-            val orderId = billState.order?.id
-            val url = baseURL + "order/" + orderId + "/pay"
-            val idempotencyKey: UUID = UUID.randomUUID() // Generates random UUID
-            val paymentIds: Array<String> = arrayOf(payment.id)
-
-            val jsonObject = JSONObject()
-            try {
-                jsonObject.put("orderId", orderId)
-                jsonObject.put("idempotencyKey", idempotencyKey.toString())
-                jsonObject.put("paymentIds", JSONArray(paymentIds))
-            } catch (e: JSONException) {
-                e.printStackTrace()
-            }
-
-            val client = OkHttpClient()
-            val mediaType = "application/json; charset=utf-8".toMediaType()
-            val body = jsonObject.toString().toRequestBody(mediaType)
-            val request: Request = Request.Builder()
-                .url(url)
-                .post(body)
-                .build()
-
-            val response: Response?
-            try {
-                response = client.newCall(request).execute()
-                Log.d("API", "Response: $response")
-                if (response.isSuccessful) {
-                    Log.d("API", "Response successful!!")
-//                var addedToDb = FirebaseManager.addOrderToFirebase(response)
-//                if (addedToDb) {
-//                    Log.d("FirebaseManager","Successfully added to db")
-//                    return true
-//                }
-                }
-
-            } catch (e: IOException) {
-                e.printStackTrace()
-                return false
-            }
-
-            return false
-        }
-
     }
 }
 
