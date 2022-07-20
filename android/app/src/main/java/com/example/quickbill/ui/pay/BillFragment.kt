@@ -15,18 +15,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.quickbill.MainActivity
 import com.example.quickbill.R
-import com.example.quickbill.api.API
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.centsToDisplayedAmount
 import com.example.quickbill.util.getActivity
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import sqip.CardEntry
 import sqip.CardEntry.DEFAULT_CARD_ENTRY_REQUEST_CODE
 import kotlin.math.max
 import kotlin.math.min
-import java.util.*
-import kotlin.collections.ArrayList
 
 @Preview
 @Composable
@@ -34,33 +32,42 @@ fun BillView(billViewModel: BillViewModel = viewModel()) {
     val tableNum = BillState.instance.tableNum!!
     var restaurantName: String? = BillState.instance.restaurantName
     BillState.instance.billViewModel = billViewModel
-    if(restaurantName == null) restaurantName = BillState.instance.locationId
+    if (restaurantName == null) restaurantName = BillState.instance.locationId
+
+    val isRefreshing by billViewModel.isRefreshing.collectAsState()
 
     QuickBillTheme {
-        Column {
-            RestaurantInfo(restaurantName!!, tableNum)
+        Box {
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(isRefreshing),
+                onRefresh = { billViewModel.refreshBill() }
+            ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    RestaurantInfo(restaurantName!!, tableNum)
 
-            Box(Modifier.fillMaxWidth()) {
-                BillList(
-                    list = billViewModel.items,
-                    onSelectItem = { item, selected ->
-                        billViewModel.itemSelected(item, selected)
-                    },
-                    onQuantityChange = { item, quantitySelected ->
-                        billViewModel.itemQuantityChosen(item, quantitySelected)
-                    },
-                )
-            }
-            Text(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(8.dp),
-                text = "Total: ${centsToDisplayedAmount(billViewModel.billTotal())}",
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Box(modifier = Modifier.align(Alignment.End)) {
-                PayBillButton(billViewModel.paymentTotal)
+                    Box(Modifier.fillMaxWidth()) {
+                        BillList(
+                            list = billViewModel.items,
+                            onSelectItem = { item, selected ->
+                                billViewModel.itemSelected(item, selected)
+                            },
+                            onQuantityChange = { item, quantitySelected ->
+                                billViewModel.itemQuantityChosen(item, quantitySelected)
+                            },
+                        )
+                    }
+                    Text(
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(8.dp),
+                        text = "Total: ${centsToDisplayedAmount(billViewModel.billTotal())}",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Box(modifier = Modifier.align(Alignment.End)) {
+                        PayBillButton(billViewModel.paymentTotal)
+                    }
+                }
             }
         }
     }
@@ -76,8 +83,7 @@ fun RestaurantInfo(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp, top = 24.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(8.dp, top = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -100,11 +106,7 @@ fun BillList(
     onSelectItem: (BillItem, Boolean) -> Unit,
     onQuantityChange: (BillItem, Int) -> Unit,
 ) {
-    Column(
-        Modifier.verticalScroll(
-            rememberScrollState()
-        )
-    ) {
+    Column {
         for (item in list) {
             LineItem(
                 itemName = item.order.name,
@@ -131,7 +133,7 @@ fun LineItem(
     itemAlreadyPaid: Boolean = false,
     itemQuantity: Int = 2,
     quantitySelected: Int = 1,
-    lineCost : Money = Money(4010, "CAD"),
+    lineCost: Money = Money(4010, "CAD"),
     onSelectItem: (Boolean) -> Unit = {},
     onQuantityChange: (Int) -> Unit = {}
 ) {
