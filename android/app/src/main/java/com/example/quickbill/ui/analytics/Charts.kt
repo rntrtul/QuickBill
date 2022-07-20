@@ -5,7 +5,7 @@ import android.view.View
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -15,23 +15,27 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.util.toRange
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import kotlin.random.Random
 
 data class ChartInfo(
     val title: String = "Spending per Day",
     val yAxisName: String = "Spending($)",
     val xAxisName: String = "Days of the week",
     val colours: List<Color> = listOf(),
-    val interact: Boolean = false,
+    val draggable: Boolean = true,
+    val zoomable: Boolean = true,
 )
 
 @Composable
 fun <T : View> ChartContainer(
     chartInfo: ChartInfo,
-    chartFactory: (Context) -> T
+    chartFactory: (Context) -> T,
+    chartUpdate: (T) -> Unit = {}
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -54,6 +58,7 @@ fun <T : View> ChartContainer(
 
             AndroidView(
                 factory = chartFactory,
+                update = chartUpdate,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(320.dp)
@@ -72,9 +77,10 @@ fun <T : View> ChartContainer(
 @Composable
 fun BarChart(
     chartInfo: ChartInfo = ChartInfo(),
-    xAxisData: List<Float> = listOf(0f, 1f, 2f, 3f, 4f, 5f, 6f),
-    yAxisData: List<Float> = listOf(1f, 2f, 3f, 4f, 5f, 6f, 7f),
+    xAxisData: List<Float> = (0..400).map { num -> num.toFloat()},
+    yAxisData: List<Float> = (0..400).map { Random.nextFloat() * 30 },
     xAxisBarLabels: List<String> = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+    viewRange: ViewRange = ViewRange.WEEK,
     dataLabel: String = "foobar"
 ) {
     val entries = ArrayList<BarEntry>()
@@ -99,7 +105,13 @@ fun BarChart(
             chartFactory = { context ->
                 val chart = com.github.mikephil.charting.charts.BarChart(context)
                 chart.data = barData
-                chart.setTouchEnabled(chartInfo.interact)
+//                chart.setTouchEnabled(chartInfo.interact)
+                chart.setPinchZoom(chartInfo.zoomable)
+                chart.isDragEnabled = chartInfo.draggable
+                chart.isDoubleTapToZoomEnabled = false
+                chart.setVisibleXRangeMaximum(viewRange.barsShown)
+                chart.setVisibleXRangeMinimum(viewRange.barsShown)
+                chart.moveViewToX(xAxisData.size.toFloat())
 
                 chart.axisRight.isEnabled = false
                 chart.axisLeft.setDrawGridLines(false)
@@ -118,6 +130,17 @@ fun BarChart(
 
                 chart.invalidate()
                 chart
+            },
+            chartUpdate = { chart ->
+                chart.setVisibleXRangeMaximum(viewRange.barsShown)
+                chart.setVisibleXRangeMinimum(viewRange.barsShown)
+                if (viewRange == ViewRange.WEEK) {
+                    chart.xAxis.valueFormatter = IndexAxisValueFormatter(xAxisBarLabels)
+                } else {
+                    chart.xAxis.valueFormatter = IndexAxisValueFormatter()
+                }
+
+                chart.invalidate()
             }
         )
     }
@@ -155,7 +178,7 @@ fun LineChart(
             chartFactory = { context ->
                 val chart = com.github.mikephil.charting.charts.LineChart(context)
                 chart.data = lineData
-                chart.setTouchEnabled(chartInfo.interact)
+                chart.setTouchEnabled(chartInfo.draggable)
 
                 chart.axisRight.isEnabled = false
                 chart.axisLeft.setDrawGridLines(false)
