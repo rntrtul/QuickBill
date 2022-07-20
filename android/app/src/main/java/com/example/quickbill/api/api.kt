@@ -29,7 +29,7 @@ class API {
     companion object {
 
         // TODO: should not have trailing slash - e.g. baseUrl + "/order
-        private val baseURL = "https://quickbill.alexnainer.com/api/"
+        private const val baseURL = "https://quickbill.alexnainer.com/api/"
 
         fun callBill(billState: BillState) {
             Log.d("API", "Call Bill!!")
