@@ -1,9 +1,11 @@
 package com.example.quickbill
 
 import android.util.Log
-import com.example.quickbill.api.API
+import com.example.quickbill.ui.pay.BillItem
 import com.example.quickbill.ui.pay.BillState
+import com.example.quickbill.ui.pay.BillViewModel
 import com.example.quickbill.ui.pay.Payment
+import com.example.quickbill.util.makePayment
 import sqip.CardDetails
 import sqip.CardEntryActivityCommand
 import sqip.CardNonceBackgroundHandler
@@ -12,15 +14,8 @@ import java.io.IOException
 class CardEntryBackgroundHandler: CardNonceBackgroundHandler {
     override fun handleEnteredCardInBackground(cardDetails : CardDetails): CardEntryActivityCommand {
         try {
-            val payment: Payment? = API.makePayment(cardDetails.nonce, BillState.instance)
-            Log.d("NETWORK LOG", "--------------------------")
+            val payment: Payment? = makePayment(cardDetails.nonce)
             Log.d("NETWORK LOG", payment.toString())
-            Log.d("NETWORK LOG", "--------------------------")
-
-            if (payment != null) {
-                val isOrderPaid: Boolean = API.attachPaymentToOrder(payment, BillState.instance)
-            }
-
 
             return CardEntryActivityCommand.Finish()
         } catch(exception: IOException) {

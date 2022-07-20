@@ -12,7 +12,7 @@ import com.example.quickbill.api.API
 
 class BillViewModel : ViewModel() {
 
-    private val _order: Order? = BillState.instance.order
+    private val _order: Order? = BillState.instance.billResponse?.order
     private val _items = _order?.lineItems?.toMutableStateList()
     private val _billItems = billFromOrder()
     private var _paymentTotal by mutableStateOf(0)
@@ -21,6 +21,8 @@ class BillViewModel : ViewModel() {
     val paymentTotal get() = _paymentTotal
 
     private fun billFromOrder(): SnapshotStateList<BillItem> {
+        Log.d("API LOG", "order item list: $_items")
+        if ( _items == null ) { return listOf<BillItem>().toMutableStateList() }
         val a = _items?.map { orderItem ->
             BillItem(
                 order = orderItem,
