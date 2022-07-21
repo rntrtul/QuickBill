@@ -17,7 +17,7 @@ import com.example.quickbill.ui.theme.QuickBillTheme
 @Composable
 fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
     // May want to use a recycler view if we show a table
-    var selectedTabIndex by remember { mutableStateOf(0) }
+//    var selectedTabIndex by remember { mutableStateOf(0) }
 
     QuickBillTheme {
         Column(
@@ -25,16 +25,16 @@ fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
         ) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
+            TabRow(selectedTabIndex = vm.selectedTabIndex) {
                 vm.analyticCategories.forEachIndexed { index, title ->
                     Tab(
                         text = { Text(title) },
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index }
+                        selected = vm.selectedTabIndex == index,
+                        onClick = { vm.selectedTabIndex = index }
                     )
                 }
             }
-            when (selectedTabIndex) {
+            when (vm.selectedTabIndex) {
                 0 -> SpendingTab(
                     selectedViewRange = vm.spendingViewRange,
                     avgCost = vm.averageCost,
@@ -63,6 +63,13 @@ fun SpendingTab(
     onViewRangeChange: (ViewRange) -> Unit = { _ -> },
 ) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        ViewRangeSelector(
+            selectedViewRange = selectedViewRange,
+            onSelect = onViewRangeChange
+        )
+        BarChart(
+            viewRange = selectedViewRange
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,13 +79,6 @@ fun SpendingTab(
             InfoBox(label = "Average Cost", info = avgCost)
             InfoBox(label = "Total Meals", info = totalMeals)
         }
-        BarChart(
-            viewRange = selectedViewRange
-        )
-        ViewRangeSelector(
-            selectedViewRange = selectedViewRange,
-            onSelect = onViewRangeChange
-        )
     }
 }
 
@@ -92,6 +92,11 @@ fun NutritionTab(
     // PieGraph of macronutrients, today andAVG
     // Bar graph of calories per day
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        ViewRangeSelector(
+            selectedViewRange = selectedViewRange,
+            onSelect = onViewRangeChange
+        )
+        BarChart()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,11 +105,6 @@ fun NutritionTab(
         ) {
             InfoBox(label = "Average Calories", info = "$averageCalories kCal")
         }
-        BarChart()
-        ViewRangeSelector(
-            selectedViewRange = selectedViewRange,
-            onSelect = onViewRangeChange
-        )
         PieChart()
     }
 

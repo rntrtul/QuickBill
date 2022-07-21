@@ -4,13 +4,11 @@ import android.content.Context
 import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -245,7 +243,6 @@ fun PieChart(
                         val chart = com.github.mikephil.charting.charts.PieChart(context)
                         chart.data = data
 
-//                chart.centerText = "MacroNutrients"
                         chart.holeRadius = 70.dp.value
                         chart.setHoleColor(backgroundColour)
 
@@ -262,7 +259,10 @@ fun PieChart(
             Column(
                 modifier = Modifier.padding(start = 16.dp)
             ) {
-                Text(text = "MacroNutrients", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge
+                )
                 for (i in percentData.indices) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
