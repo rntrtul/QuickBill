@@ -23,10 +23,12 @@ class AnalyticsViewModel : ViewModel() {
 
     var spendingViewRange by mutableStateOf(ViewRange.WEEK)
     var nutritionViewRange by mutableStateOf(ViewRange.WEEK)
+    var selectedTabIndex by mutableStateOf(0)
 
     val averageCost: String get() = centsToDisplayedAmount(_averageCost)
     val averageCalories: String get() = _averageCalories.toString()
-//    fixme: change to get accurate data
+
+    //    fixme: change to get accurate data
     val totalMeals: String get() = "45"
 
     val analyticCategories = listOf("Spending", "Nutrition")
@@ -47,14 +49,15 @@ class AnalyticsViewModel : ViewModel() {
         })
     }
 
-    fun spendingViewRangeChange(viewRange: ViewRange){
+    fun spendingViewRangeChange(viewRange: ViewRange) {
         spendingViewRange = viewRange
         // todo: update all lists of spending data?
+        _averageCost = (viewRange.barsShown * 10).toInt()
     }
 
-    fun nutritionViewRangeChange(viewRange: ViewRange){
+    fun nutritionViewRangeChange(viewRange: ViewRange) {
         nutritionViewRange = viewRange
         // todo: update all lists of nutrition data?
+        _averageCalories = (viewRange.barsShown * 8).toInt()
     }
-
 }
