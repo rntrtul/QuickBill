@@ -105,6 +105,7 @@ fun NutritionTab(
             selectedViewRange = selectedViewRange,
             onSelect = onViewRangeChange
         )
+        PieChart()
     }
 
 }

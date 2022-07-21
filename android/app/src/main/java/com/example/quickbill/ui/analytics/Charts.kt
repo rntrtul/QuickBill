@@ -2,12 +2,15 @@ package com.example.quickbill.ui.analytics
 
 import android.content.Context
 import android.view.View
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -15,7 +18,6 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.util.toRange
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
@@ -77,7 +79,7 @@ fun <T : View> ChartContainer(
 @Composable
 fun BarChart(
     chartInfo: ChartInfo = ChartInfo(),
-    xAxisData: List<Float> = (0..400).map { num -> num.toFloat()},
+    xAxisData: List<Float> = (0..400).map { num -> num.toFloat() },
     yAxisData: List<Float> = (0..400).map { Random.nextFloat() * 30 },
     xAxisBarLabels: List<String> = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
     viewRange: ViewRange = ViewRange.WEEK,
@@ -207,10 +209,80 @@ fun LineChart(
 
 @Preview
 @Composable
-fun PieChart() {
+fun PieChart(
+    title: String = "MacroNutrients",
+    percentData: List<Float> = listOf(30.8f, 18.5f, 26.7f, 24.0f),
+    labels: List<String> = listOf("Protein", "Carbs", "Sugar", "Fats"),
+    colours: List<Color> = listOf(
+        Color.Magenta,
+        Color.Red,
+        Color.Green,
+        Color.Cyan
+    )
+) {
+    val entries = ArrayList<PieEntry>()
+    for (i in percentData.indices) {
+        entries.add(PieEntry(percentData[i], ""))
+    }
 
+    val pieDataSet = PieDataSet(entries, "MacroNutrients")
+    pieDataSet.colors = colours.map { color -> color.toArgb() }
+
+    val data = PieData(pieDataSet)
+
+    QuickBillTheme {
+        val backgroundColour = MaterialTheme.colorScheme.background.toArgb()
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.width(160.dp)) {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    factory = { context ->
+                        val chart = com.github.mikephil.charting.charts.PieChart(context)
+                        chart.data = data
+
+//                chart.centerText = "MacroNutrients"
+                        chart.holeRadius = 70.dp.value
+                        chart.setHoleColor(backgroundColour)
+
+                        chart.legend.isEnabled = false
+                        chart.description.isEnabled = false
+                        chart.isRotationEnabled = false
+                        chart.data.setDrawValues(false)
+
+                        chart.invalidate()
+                        chart
+                    })
+            }
+
+            Column(
+                modifier = Modifier.padding(start = 16.dp)
+            ) {
+                Text(text = "MacroNutrients", style = MaterialTheme.typography.labelLarge)
+                for (i in percentData.indices) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(colours[i])
+                                .padding(4.dp)
+                        )
+                        Text(
+                            text = "${labels[i]} (${percentData[i]}g)",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
-
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
 fun Modifier.vertical() =
