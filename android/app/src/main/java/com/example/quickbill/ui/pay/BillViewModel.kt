@@ -9,9 +9,9 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quickbill.api.API
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 
 class BillViewModel : ViewModel() {
@@ -28,11 +28,14 @@ class BillViewModel : ViewModel() {
 
     private fun billFromOrder(): SnapshotStateList<BillItem> {
         Log.d("API LOG", "order item list: $_items")
-        if ( _items == null ) { return listOf<BillItem>().toMutableStateList() }
+        if (_items == null) {
+            return listOf<BillItem>().toMutableStateList()
+        }
         val a = _items?.map { orderItem ->
             BillItem(
                 order = orderItem,
-                initialQuantitySelected = orderItem.quantity
+                initialQuantitySelected = orderItem.quantity,
+                alreadyPaid = orderItem.totalMoney.amount == 0
             )
         }
 
@@ -69,6 +72,13 @@ class BillViewModel : ViewModel() {
             it.amountPaying.amount = it.quantitySelected * it.order.basePriceMoney.amount
             calcPaymentTotal()
             Log.d("BILLVM", "${it.amountPaying} $quantity")
+        }
+    }
+
+    fun itemAmountPayingChange(item: BillItem, amount: Int){
+        _billItems.find { it.order.name == item.order.name }?.let { it ->
+            it.amountPaying.amount = amount
+            calcPaymentTotal()
         }
     }
 
