@@ -32,7 +32,7 @@ class PayViewModel : ViewModel() {
         parsedQRCode!!.setBill( BillState.instance )
         API.callBill( BillState.instance )
 
-        Log.d(TAG, "API instance Bill: " + BillState.instance.billResponse!!.order)
+        Log.d(TAG, "API instance Bill: " + BillState.instance.billResponse)
 
         if (BillState.instance.billResponse != null) {
             _scanSuccessful = true
