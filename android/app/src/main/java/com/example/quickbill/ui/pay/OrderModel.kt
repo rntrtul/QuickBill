@@ -7,6 +7,11 @@ import com.example.quickbill.util.centsToDisplayedAmount
 import java.util.*
 import kotlin.collections.ArrayList
 
+data class BillResponse(
+    val order: Order,
+    val userOrdersStr: String
+)
+
 data class Order(
     val id: String,
     val locationId: String,

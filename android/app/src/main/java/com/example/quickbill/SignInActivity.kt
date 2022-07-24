@@ -1,6 +1,5 @@
 package com.example.quickbill
 
-import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -8,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,19 +15,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.theme.QuickBillTheme
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+
 
 
 class SignInActivity: AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent{
@@ -42,7 +46,9 @@ class SignInActivity: AppCompatActivity() {
         super.onStart()
         val currentUser = FirebaseManager.getAuth().currentUser
         if(currentUser != null){
-            reload()
+            val intent= Intent(this,MainActivity::class.java)
+            startActivity(intent)
+            finish()
         }
     }
 
@@ -104,14 +110,13 @@ class SignInActivity: AppCompatActivity() {
     @Preview
     @Composable
     fun SignInContent() {
-        val (email, onEmailChange) = remember {
+        val (email, onEmailChange) = rememberSaveable {
             mutableStateOf("")
         }
-        val (password, onPasswordChange) = remember {
+        val (password, onPasswordChange) = rememberSaveable {
             mutableStateOf("")
         }
-
-
+        val focusManager = LocalFocusManager.current
         Column (
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +131,7 @@ class SignInActivity: AppCompatActivity() {
                     style = MaterialTheme.typography.displayMedium,
                     modifier = Modifier
                         .padding(28.dp),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             Column(
@@ -139,36 +144,42 @@ class SignInActivity: AppCompatActivity() {
                 OutlinedTextField(
                     value = email,
                     onValueChange = onEmailChange,
-                    label = { Text(text = "Email", style = MaterialTheme.typography.labelLarge) },
+                    label = { Text(text = "Email", color = MaterialTheme.colorScheme.onPrimaryContainer) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 21.dp),
-                    shape = MaterialTheme.shapes.medium
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primaryContainer),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus()}),
+                    shape = MaterialTheme.shapes.medium,
+                    singleLine = true
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = onPasswordChange,
-                    label = { Text(text = "Password",style = MaterialTheme.typography.labelLarge) },
+                    label = { Text(text = "Password",color = MaterialTheme.colorScheme.onPrimaryContainer) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 21.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primaryContainer),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus()}),
                     visualTransformation = PasswordVisualTransformation(),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    singleLine = true
                 )
-                TextButton(
-
-                    onClick = { sendEmailVerification() },
-                ) {
-                    Text(text = "Forgot Password",  style = MaterialTheme.typography.labelLarge)
-                }
                 Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { signIn(email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(14.dp),
                 ) {
-                    Text(text = "Login",  style = MaterialTheme.typography.labelLarge)
+                    Text(text = "Login", color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
                 Row(
                     modifier = Modifier
@@ -176,11 +187,6 @@ class SignInActivity: AppCompatActivity() {
                         .padding(top = 42.dp, start = 14.dp, end = 14.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Don't have an Account?",
-                        modifier = Modifier
-                            .padding(top=29.dp) ,
-                        style = MaterialTheme.typography.labelLarge
-                    )
                     TextButton(
                         onClick = {
                             signUp()
@@ -188,7 +194,7 @@ class SignInActivity: AppCompatActivity() {
                         modifier = Modifier
                             .padding(top=14.dp)
                     ) {
-                        Text(text = "Sign Up",style = MaterialTheme.typography.labelLarge)
+                        Text(text = "Don't have an Account? Sign Up",color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelLarge)
                     }
                 }
 

@@ -1,6 +1,9 @@
 package com.example.quickbill.firebaseManager
 
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.coroutineScope
 import com.example.quickbill.MainActivity
 import com.example.quickbill.ui.pay.Money
 import com.example.quickbill.ui.pay.OrderItem
@@ -14,10 +17,18 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.*
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 data class NutritionInfo(
     val sugar_g: Double,
@@ -46,7 +57,7 @@ class FirebaseManager {
         private var db: FirebaseFirestore? = null
         private var TAG = "FirebaseManager"
         private val baseURL = "https://api.calorieninjas.com/v1/"
-        private var api_key = "redacted"
+        private var api_key = ""
         private var mOrderItems: ArrayList<OrderItem> = ArrayList() // TODO: change type of object from OrderItem to something else
         private var mNutritionItems: ArrayList<NutritionInfo> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
@@ -63,7 +74,7 @@ class FirebaseManager {
             collectionRef = db!!.collection(collectionName)
 
             var snapshot: DocumentSnapshot? = null
-            if (collectionName == "testOrders") {
+            if (collectionName == "testFoodOrders") {
                 snapshot = orderDocumentSnapshot!!
             } else if (collectionName == "testNutrition"){
                 snapshot = nutritionDocumentSnapshot!!
@@ -88,7 +99,7 @@ class FirebaseManager {
                 fun onComplete(task: Task<QuerySnapshot>) {
                     if (task.isSuccessful) {
                         for (document: QueryDocumentSnapshot in task.getResult()) {
-                            if (collectionName == "testOrders") {
+                            if (collectionName == "testFoodOrders") {
                                 var item: OrderItem
                                 item = document.toObject(OrderItem::class.java)
                                 mOrderItems.add(item)
@@ -99,7 +110,7 @@ class FirebaseManager {
                             }
                         }
                         if (!task.getResult().isEmpty){
-                            if (collectionName == "testOrders") {
+                            if (collectionName == "testFoodOrders") {
                                 orderDocumentSnapshot=task.getResult().getDocuments().get(task.getResult().size()-1) // references last queried doc
                             } else if (collectionName=="testNutrition"){
                                 nutritionDocumentSnapshot=task.getResult().getDocuments().get(task.getResult().size()-1) // references last queried doc
@@ -114,33 +125,50 @@ class FirebaseManager {
         }
 
 
-
-        fun getNutrition(item: OrderItem): NutritionInfo? {
+        fun getNutrition(name: String): NutritionInfo? {
+//        fun getNutrition(item: OrderItem): NutritionInfo? {
             // May also add variant name
-            val query_url = baseURL + "nutrition?query="+item.name;
-            var response: Response? = null
+//            val query_url = baseURL + "nutrition?query="+item.name;
+            val query_url = baseURL + "nutrition?query="+name;
             val client = OkHttpClient()
-            try {
-                val request: Request = Request.Builder()
-                    .url(query_url)
-                    .addHeader("X-Api-Key", api_key)
-                    .get()
-                    .build()
+            var nutritionInfo: NutritionInfo
+            var responseBody: String = ""
+            val job = GlobalScope.launch(Dispatchers.IO) {
+                var response: Response? = null
+                try {
+                    val request: Request = Request.Builder()
+                        .url(query_url)
+                        .addHeader("X-Api-Key", api_key)
+                        .get()
+                        .build()
+                    response = client.newCall(request).execute()
 
-                response = client.newCall(request).execute()
+                    // Assuming one object
+                    var arrayRes: JSONObject = JSONObject(response.body.string())
+                    responseBody = arrayRes.getJSONArray("items").getJSONObject(0).toString()
+                    Log.d(TAG, "Response: $response")
+                    Log.d(TAG, "Response again: ${responseBody}")
 
-                Log.d(TAG, "Response: $response")
-                var nutritionInfo: NutritionInfo? = null
-
-                if (response.isSuccessful) {
-                    Log.d(TAG, "Response successful!!")
-                    nutritionInfo = Gson().fromJson(response.body.string(), NutritionInfo::class.java)
-                    return nutritionInfo
+                } catch (e: java.lang.Exception) {
+                    Log.d(TAG, "$e")
+                    Log.d(TAG, "Error executing nutrition info query")
+                    response = null
+                    responseBody = ""
                 }
-            } catch (e: java.lang.Exception) {
-                Log.d(TAG, "$e")
-                Log.d(TAG, "Error executing nutrition info query")
             }
+            runBlocking {
+                job.join() // wait until child coroutine completes
+            }
+
+            if (responseBody != "") {
+                Log.d(TAG, "Response body again: ${responseBody}")
+                nutritionInfo = Gson().fromJson(
+                    responseBody,
+                    NutritionInfo::class.java
+                )
+                Log.d(TAG, nutritionInfo.toString())
+            }
+
             return null
         }
 
@@ -169,7 +197,7 @@ class FirebaseManager {
                 }
 
                 // Add order with a generated ID
-                db!!.collection("testOrders")
+                db!!.collection("testFoodOrders")
                     .add(order)
                     .addOnSuccessListener { documentReference ->
                         Log.d(
@@ -182,6 +210,7 @@ class FirebaseManager {
                         failed = 1
                     }
 
+
                 // Add to the nutrition collection
                 val foodItem: HashMap<String, Any> = HashMap()
                 foodItem.put("userId",0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
@@ -192,7 +221,18 @@ class FirebaseManager {
                 } catch(e: Exception) {
                     foodItem.put("foodVariantName", "")
                 }
-//            foodItem.put("calories", getNutrition(item))
+                var nutritionInfo: NutritionInfo? = getNutrition(item.name)
+                // TODO: instead of using item.name, use item
+                foodItem.put("calories", nutritionInfo?.calories.toString())
+                foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
+                foodItem.put("fat", nutritionInfo?.fat_total_g.toString())
+                foodItem.put("saturated_fat", nutritionInfo?.fat_saturated_g.toString())
+                foodItem.put("carbohydrates", nutritionInfo?.carbohydrates_total_g.toString())
+                foodItem.put("protein", nutritionInfo?.protein_g.toString())
+                foodItem.put("sodium", nutritionInfo?.sodium_mg.toString())
+                foodItem.put("sugar", nutritionInfo?.sugar_g.toString())
+                foodItem.put("fiber", nutritionInfo?.fiber_g.toString())
+                foodItem.put("cholesterol", nutritionInfo?.cholesterol_mg.toString())
 
                 db!!.collection("testNutrition")
                     .add(foodItem)
@@ -219,6 +259,13 @@ class FirebaseManager {
         fun initialize() {
             //Obtain Firestore
             db = FirebaseFirestore.getInstance()
+
+//            var res: NutritionInfo? = FirebaseManager.getNutrition("hotdog")
+//            print(res)
+
+//            FirebaseManager.getData("testFoodOrders")
+//            Log.d(FirebaseManager.TAG, "${FirebaseManager.mOrderItems}")
+
         }
     }
 
