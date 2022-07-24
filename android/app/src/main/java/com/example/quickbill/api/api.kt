@@ -72,6 +72,10 @@ class API {
                 response = client.newCall(request).execute()
                 Log.d("NETWORK LOG", "Response: $response")
                 payment = Gson().fromJson(response.body.string(), Payment::class.java)
+//                var res = FirebaseManager.addOrderToFirebase(payment)
+//                if (!res) {
+//                    Log.d("API", "Failed to add order to Firebase")
+//                }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
