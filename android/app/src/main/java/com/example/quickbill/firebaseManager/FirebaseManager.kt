@@ -1,18 +1,12 @@
 package com.example.quickbill.firebaseManager
 
-import android.content.Context.MODE_PRIVATE
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.coroutineScope
-import com.example.quickbill.MainActivity
 import com.example.quickbill.ui.pay.Money
 import com.example.quickbill.ui.pay.OrderItem
 import com.example.quickbill.ui.pay.Payment
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.*
 import com.google.firebase.ktx.Firebase
@@ -21,14 +15,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import okhttp3.*
-import org.json.JSONArray
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONObject
-import java.io.IOException
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+
 
 data class NutritionInfo(
     val sugar_g: Double,
@@ -43,8 +35,15 @@ data class NutritionInfo(
     val cholesterol_mg: Double,
     val protein_g: Double,
     val carbohydrates_total_g: Double,
+    val userId: String,
     var date: Date,
 )
+
+data class FirebaseOrderItem(
+    val orderId: String,
+    val costCAD: String
+)
+
 
 class FirebaseManager {
 
@@ -52,79 +51,105 @@ class FirebaseManager {
     // sample: https://api.nal.usda.gov/fdc/v1/foods/search?query=apple&pageSize=2&api_key=redacted
     // https://api.calorieninjas.com/v1/nutrition?query=
 
+    interface MyCallback {
+        fun onCallback(item: Map<String,Any>)
+    }
 
     companion object {
         private var db: FirebaseFirestore? = null
         private var TAG = "FirebaseManager"
         private val baseURL = "https://api.calorieninjas.com/v1/"
-        private var api_key = ""
-        private var mOrderItems: ArrayList<OrderItem> = ArrayList() // TODO: change type of object from OrderItem to something else
-        private var mNutritionItems: ArrayList<NutritionInfo> = ArrayList()
+        private var api_key = "RGnaYobkRoru061sUEV0cg==VR5GXMOyhcDU5kD7"
+        private var mOrderItems: ArrayList<FirebaseOrderItem> = ArrayList()
+        private var mNutritionItems: ArrayList<Map<String,Any>> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
         private var auth: FirebaseAuth = Firebase.auth
 
         // to reference currently signed user - auth.currentUser
 
+        // Operational
+        fun addItemToOrderItems(item: Map<String, Any>) {
+            var fb_item: FirebaseOrderItem = FirebaseOrderItem(orderId = item.get("orderId").toString(), costCAD = item.get("costCAD").toString())
+            this.mOrderItems.add(fb_item)
+//            Log.d(TAG, "Added item to mOrderItems")
+        }
+
+        // Operational
+        fun addItemToNutritionItems(item: Map<String, Any>) {
+            this.mNutritionItems.add(item)
+        }
+
+        // Operational
+        fun parseTask(collectionName: String, task: Task<QuerySnapshot>, myCallback: MyCallback) {
+//            if (task.isSuccessful) {
+//                for (document in task.result) {
+//                    Log.d(TAG, document.id + " => " + document.data)
+//                }
+//            } else {
+//                Log.w(TAG, "Error getting documents.", task.exception)
+//            }
+            if (task.isSuccessful) {
+                for (document: QueryDocumentSnapshot in task.result) {
+                    var item: Map<String, Any>
+//                    Log.d(TAG, "document is {${document.getData()}")
+                    item = document.getData()
+                    if (collectionName == "testFoodOrders") {
+                        this.addItemToOrderItems(item)
+                        myCallback.onCallback(item)
+                    } else if (collectionName == "testNutrition") {
+                        this.mNutritionItems.add(item)
+                        myCallback.onCallback(item)
+                    }
+                }
+                if (!task.getResult().isEmpty) {
+                    if (collectionName == "testFoodOrders") {
+                        this.orderDocumentSnapshot = task.getResult().getDocuments()
+                            .get(task.getResult().size() - 1) // references last queried doc
+                    } else if (collectionName == "testNutrition") {
+                        this.nutritionDocumentSnapshot = task.getResult().getDocuments()
+                            .get(task.getResult().size() - 1) // references last queried doc
+                    }
+                }
+            } else {
+                Log.w(TAG, "Error getting documents.", task.exception)
+            }
+        }
 
         // TODO : make a separate listener that listens for changes. Return the arraylist only
-        fun getData(collectionName: String) {
-
-            val collectionRef : CollectionReference
-            collectionRef = db!!.collection(collectionName)
+        // Operational
+        fun getData(collectionName: String, myCallback: MyCallback, foodName: String? = null) {
 
             var snapshot: DocumentSnapshot? = null
             if (collectionName == "testFoodOrders") {
-                snapshot = orderDocumentSnapshot!!
+                Log.d(TAG, collectionName)
+                snapshot = this.orderDocumentSnapshot
             } else if (collectionName == "testNutrition"){
-                snapshot = nutritionDocumentSnapshot!!
+//                assert((foodName != "None"))
+                snapshot = this.nutritionDocumentSnapshot
             }
+//            Log.d(TAG,"Passed the snapshot section")
 
-            var query: Query
-
-            // Do not want duplicate items
             if (snapshot != null) {
-                query = collectionRef
-                    .whereEqualTo("user_id", 0) //FirebaseAuth.getInstance().getCurrentUser().getUid()
-                //.orderBy("date", Query.Direction.ASCENDING) // Need to add custom index on console
+                db!!.collection(collectionName)
+                    .whereEqualTo("userId", "0")
                     .startAfter(snapshot)
-            } else {
-                query = collectionRef
-                    .whereEqualTo("user_id", 0) //FirebaseAuth.getInstance().getCurrentUser().getUid()
-                //.orderBy("date", Query.Direction.ASCENDING) // Need to add custom index on console
-            }
-
-            query.get().addOnCompleteListener(OnCompleteListener<QuerySnapshot>() {
-                @Override
-                fun onComplete(task: Task<QuerySnapshot>) {
-                    if (task.isSuccessful) {
-                        for (document: QueryDocumentSnapshot in task.getResult()) {
-                            if (collectionName == "testFoodOrders") {
-                                var item: OrderItem
-                                item = document.toObject(OrderItem::class.java)
-                                mOrderItems.add(item)
-                            } else if (collectionName=="testNutrition"){
-                                var item: NutritionInfo
-                                item = document.toObject(NutritionInfo::class.java)
-                                mNutritionItems.add(item)
-                            }
-                        }
-                        if (!task.getResult().isEmpty){
-                            if (collectionName == "testFoodOrders") {
-                                orderDocumentSnapshot=task.getResult().getDocuments().get(task.getResult().size()-1) // references last queried doc
-                            } else if (collectionName=="testNutrition"){
-                                nutritionDocumentSnapshot=task.getResult().getDocuments().get(task.getResult().size()-1) // references last queried doc
-                            }
-                        }
-                        // recyclerViewAdapter.notifyDatasetChanged(
-                    } else{
-                        Log.d(TAG, "Failed to get orders, check logs")
+                    .get()
+                    .addOnCompleteListener { task ->
+                        parseTask(collectionName, task, myCallback)
                     }
-                }
-            })
+            } else {
+                db!!.collection(collectionName)
+                    .whereEqualTo("userId", "0")
+                    .get()
+                    .addOnCompleteListener { task ->
+                        parseTask(collectionName, task, myCallback)
+                    }
+            }
         }
 
 
+        // Operational
         fun getNutrition(name: String): NutritionInfo? {
 //        fun getNutrition(item: OrderItem): NutritionInfo? {
             // May also add variant name
@@ -174,54 +199,49 @@ class FirebaseManager {
 
 
 
-        fun addOrderToFirebase(info: Response): Boolean {
-            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
+        fun addOrderToFirebase(infoDeser: Payment): Boolean {
+//            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
             var lineItems = infoDeser.lineItems
             var foodNames = ArrayList<Pair<String,String>>()
             var paidAmounts = ArrayList<Money>()
             var failed = 1
 
+            // Add to the orders collection (tracks mainly spending)
+            val order: HashMap<String, Any> = HashMap()
+            order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
+            order.put("orderId", 0)
+            order.put("lineItems", lineItems.toArray())
+            order.put("costCAD", infoDeser.totalMoney)
+
+            // Add order with a generated ID
+            db!!.collection("testFoodOrders")
+                .add(order)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(
+                        TAG,
+                        "Order added with ID: " + documentReference.id
+                    )
+                    addItemToOrderItems(order)
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    failed = 1
+                }
+
             for (item: OrderItem in lineItems) {
 //            foodNames.add(Pair(item.name,item.variationName))
 //            paidAmounts.add(item.totalMoney)
-
-                // Add to the orders collection (tracks mainly spending)
-                val order: HashMap<String, Any> = HashMap()
-                order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
-                order.put("orderId", 0)
-                order.put("foodName", item.name)
-                try {
-                    order.put("foodVariantName", item.variationName)
-                } catch(e: Exception) {
-                    order.put("foodVariantName", "")
-                }
-
-                // Add order with a generated ID
-                db!!.collection("testFoodOrders")
-                    .add(order)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d(
-                            TAG,
-                            "Order added with ID: " + documentReference.id
-                        )
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w(TAG, "Error adding document", e)
-                        failed = 1
-                    }
-
-
                 // Add to the nutrition collection
                 val foodItem: HashMap<String, Any> = HashMap()
                 foodItem.put("userId",0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
                 foodItem.put("date", infoDeser.date)
-                foodItem.put("foodName", item.name)
+                foodItem.put("foodName", item.name.lowercase())
                 try {
-                    foodItem.put("foodVariantName", item.variationName)
+                    foodItem.put("foodVariantName", item.variationName.lowercase())
                 } catch(e: Exception) {
                     foodItem.put("foodVariantName", "")
                 }
-                var nutritionInfo: NutritionInfo? = getNutrition(item.name)
+                var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
                 // TODO: instead of using item.name, use item
                 foodItem.put("calories", nutritionInfo?.calories.toString())
                 foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
@@ -241,6 +261,7 @@ class FirebaseManager {
                             TAG,
                             "Food item added with ID: " + documentReference.id
                         )
+                        addItemToNutritionItems(foodItem)
                     }
                     .addOnFailureListener { e ->
                         Log.w(TAG, "Error adding document", e)
@@ -259,12 +280,18 @@ class FirebaseManager {
         fun initialize() {
             //Obtain Firestore
             db = FirebaseFirestore.getInstance()
+//            Log.d(FirebaseManager.TAG, "${FirebaseManager.mOrderItems.size}") //true = 0
+//            Log.d(FirebaseManager.TAG, "${FirebaseManager.orderDocumentSnapshot == null}") // true
 
 //            var res: NutritionInfo? = FirebaseManager.getNutrition("hotdog")
 //            print(res)
 
-//            FirebaseManager.getData("testFoodOrders")
-//            Log.d(FirebaseManager.TAG, "${FirebaseManager.mOrderItems}")
+//            FirebaseManager.getData("testFoodOrders", object : MyCallback {
+//                override fun onCallback(item: Map<String,Any>) {
+//                    Log.d(TAG, "${item.toString()}")
+//                }
+//            })
+//            Log.d(TAG, "mOrderItems are: ${this.mOrderItems}")
 
         }
     }

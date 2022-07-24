@@ -1,158 +1,164 @@
 package com.example.quickbill.ui.analytics
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.quickbill.ui.theme.QuickBillTheme
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
-class AnalyticsFragment : Fragment() {
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                AnalyticsContent()
-            }
-        }
-    }
-}
-
+@Preview
 @Composable
-fun AnalyticsContent() {
+fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
     // May want to use a recycler view if we show a table
+//    var selectedTabIndex by remember { mutableStateOf(0) }
 
-    val analyticsViewModel: AnalyticsViewModel = viewModel()
     QuickBillTheme {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(8.dp)
         ) {
-            Text(
-                text = "Spending Analysis",
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Chart()
-            Chart(
-                title = "Calories Consumed",
-                yAxisName = "Calories (Kcal)",
-                xAxisData = listOf(4f, 3f, 2f, 7f, 6f, 1f, 5f)
-            )
+            TabRow(selectedTabIndex = vm.selectedTabIndex) {
+                vm.analyticCategories.forEachIndexed { index, title ->
+                    Tab(
+                        text = { Text(title) },
+                        selected = vm.selectedTabIndex == index,
+                        onClick = { vm.selectedTabIndex = index }
+                    )
+                }
+            }
+            when (vm.selectedTabIndex) {
+                0 -> SpendingTab(
+                    selectedViewRange = vm.spendingViewRange,
+                    avgCost = vm.averageCost,
+                    totalMeals = vm.totalMeals,
+                    onViewRangeChange = { viewRange ->
+                        vm.spendingViewRangeChange(viewRange)
+                    })
+                1 -> NutritionTab(
+                    selectedViewRange = vm.nutritionViewRange,
+                    averageCalories = vm.averageCalories,
+                    onViewRangeChange = { viewRange ->
+                        vm.nutritionViewRangeChange(viewRange)
+                    }
+                )
+            }
         }
     }
 }
 
 @Preview
 @Composable
-fun Chart(
-    title: String = "Spending per Day",
-    yAxisName: String = "Spending ($)",
-    xAxisName: String = "Days of the week",
-    xAxisData: List<Float> = listOf(1f, 2f, 3f, 4f, 5f, 6f, 7f)
+fun SpendingTab(
+    selectedViewRange: ViewRange = ViewRange.WEEK,
+    avgCost: String = "$34.34",
+    totalMeals: String = "43",
+    onViewRangeChange: (ViewRange) -> Unit = { _ -> },
 ) {
-    // todo: figure out proper mapping
-    val daysOfWeek = listOf("Tmp", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-
-    val entries = ArrayList<BarEntry>()
-    for (i in xAxisData) {
-        entries.add(BarEntry(i, i))
-    }
-    val dataSet = BarDataSet(entries, "foobar")
-    dataSet.setDrawValues(false)
-    val lineData = BarData(dataSet)
-
-    QuickBillTheme {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = title, modifier = Modifier.padding(8.dp),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = yAxisName, modifier = Modifier
-                        .vertical()
-                        .rotate(-90f)
-                        .padding(4.dp),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.labelSmall
-                )
-
-                AndroidView(
-                    factory = { context ->
-                        val chart = BarChart(context)
-                        chart.data = lineData
-
-                        chart.axisRight.isEnabled = false
-                        chart.axisLeft.setDrawGridLines(false)
-                        chart.axisLeft.granularity = 1f
-                        chart.axisLeft.axisLineWidth = 2f
-
-                        chart.xAxis.setDrawGridLines(false)
-                        chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-                        chart.xAxis.granularity = 1f
-                        chart.xAxis.valueFormatter = IndexAxisValueFormatter(daysOfWeek)
-
-                        chart.description.isEnabled = false
-                        chart.legend.isEnabled = false
-
-                        chart.invalidate()
-                        chart
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(320.dp)
-                )
-            }
-            Text(
-                text = xAxisName,
-                modifier = Modifier.padding(8.dp),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.labelSmall
-            )
+    val vm: AnalyticsViewModel = viewModel()
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        ViewRangeSelector(
+            selectedViewRange = selectedViewRange,
+            onSelect = onViewRangeChange
+        )
+        BarChart(
+            viewRange = selectedViewRange,
+            onTranslate = { start, end -> vm.spendingRangeChange(start, end) }
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            InfoBox(label = "Average Cost", info = avgCost)
+            InfoBox(label = "Total Meals", info = totalMeals)
         }
     }
 }
 
-// https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
-fun Modifier.vertical() =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.height, placeable.width) {
-            placeable.place(
-                x = -(placeable.width / 2 - placeable.height / 2),
-                y = -(placeable.height / 2 - placeable.width / 2)
+@Preview
+@Composable
+fun NutritionTab(
+    selectedViewRange: ViewRange = ViewRange.WEEK,
+    averageCalories: String = "2300",
+    onViewRangeChange: (ViewRange) -> Unit = { _ -> },
+) {
+    // max calories in 1 meal or 1 day?
+    val vm: AnalyticsViewModel = viewModel()
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        ViewRangeSelector(
+            selectedViewRange = selectedViewRange,
+            onSelect = onViewRangeChange
+        )
+        BarChart(
+            viewRange = selectedViewRange,
+            onTranslate = { start, end -> vm.nutritionRangeChange(start, end) }
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            InfoBox(label = "Average Calories", info = "$averageCalories kCal")
+        }
+        PieChart()
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun InfoBox(
+    label: String = "Average Cost",
+    info: String = "$45"
+) {
+    Card {
+        Box(modifier = Modifier.padding(8.dp)) {
+            Column {
+                Text(
+                    text = info,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+// compose doesn't have implementation for segmented button yet
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun ViewRangeSelector(
+    ranges: List<ViewRange> = listOf(ViewRange.WEEK, ViewRange.MONTH, ViewRange.YEAR),
+    selectedViewRange: ViewRange = ViewRange.WEEK,
+    onSelect: (ViewRange) -> Unit = { _ -> }
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        ranges.forEach { viewType ->
+            FilterChip(
+                selected = viewType == selectedViewRange,
+                onClick = { onSelect(viewType) },
+                label = { Text(text = viewType.displayName) }
             )
         }
     }
+}
