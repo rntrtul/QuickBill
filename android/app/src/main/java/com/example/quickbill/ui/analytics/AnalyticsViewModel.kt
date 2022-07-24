@@ -68,7 +68,7 @@ class AnalyticsViewModel : ViewModel() {
     }
 
     fun getOrderData() {
-        FirebaseManager.getData("testOrders", object : FirebaseManager.MyCallback {
+        FirebaseManager.getData("testFoodOrders", object : FirebaseManager.MyCallback {
                 override fun onCallback(item: Map<String,Any>) {
                     Log.d(TAG, "${item.toString()}")
                 }
