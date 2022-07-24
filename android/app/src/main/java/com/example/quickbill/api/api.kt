@@ -53,6 +53,11 @@ class API {
             }
             if (result != "") {
                 BillState.instance.billResponse = Gson().fromJson(result, BillResponse::class.java)
+                // Testing line items part
+//                var payment: Payment = Gson().fromJson(JSONObject(result).getJSONObject("order").toString(), Payment::class.java)
+//                Log.d("FirebaseLog", "Going to add to Firebase")
+//                Log.d("FirebaseLog", payment.toString())
+//                var res = FirebaseManager.addOrderToFirebase(payment)
             }
         }
 
@@ -72,10 +77,9 @@ class API {
                 response = client.newCall(request).execute()
                 Log.d("NETWORK LOG", "Response: $response")
                 payment = Gson().fromJson(response.body.string(), Payment::class.java)
-//                var res = FirebaseManager.addOrderToFirebase(payment)
-//                if (!res) {
-//                    Log.d("API", "Failed to add order to Firebase")
-//                }
+                Log.d("API", "Going to add to Firebase")
+                Log.d("API", payment.toString())
+                var res = FirebaseManager.addOrderToFirebase(payment)
             } catch (e: IOException) {
                 e.printStackTrace()
             }
