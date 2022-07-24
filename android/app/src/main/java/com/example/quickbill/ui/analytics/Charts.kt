@@ -1,6 +1,8 @@
 package com.example.quickbill.ui.analytics
 
 import android.content.Context
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,9 +19,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.quickbill.ui.theme.QuickBillTheme
+import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.listener.ChartTouchListener
+import com.github.mikephil.charting.listener.OnChartGestureListener
 import kotlin.random.Random
 
 data class ChartInfo(
@@ -73,6 +78,45 @@ fun <T : View> ChartContainer(
     }
 }
 
+//todo: move to util or own file
+class ChartListener : OnChartGestureListener {
+    var chart: BarChart? = null
+    var onTranslate: (Float, Float) -> Unit = { _, _ -> }
+
+    override fun onChartGestureStart(
+        me: MotionEvent?,
+        lastPerformedGesture: ChartTouchListener.ChartGesture?
+    ) {
+    }
+
+    override fun onChartGestureEnd(
+        me: MotionEvent?,
+        lastPerformedGesture: ChartTouchListener.ChartGesture?
+    ) {
+    }
+
+    override fun onChartLongPressed(me: MotionEvent?) {}
+
+    override fun onChartDoubleTapped(me: MotionEvent?) {}
+
+    override fun onChartSingleTapped(me: MotionEvent?) {}
+
+    override fun onChartFling(
+        me1: MotionEvent?,
+        me2: MotionEvent?,
+        velocityX: Float,
+        velocityY: Float
+    ) {
+    }
+
+    override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {}
+
+    override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
+        onTranslate(chart?.lowestVisibleX!!, chart?.highestVisibleX!!)
+    }
+
+}
+
 @Preview
 @Composable
 fun BarChart(
@@ -81,7 +125,8 @@ fun BarChart(
     yAxisData: List<Float> = (0..400).map { Random.nextFloat() * 30 },
     xAxisBarLabels: List<String> = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
     viewRange: ViewRange = ViewRange.WEEK,
-    dataLabel: String = "foobar"
+    dataLabel: String = "foobar",
+    onTranslate: (Float, Float) -> Unit = { _, _ -> }
 ) {
     val entries = ArrayList<BarEntry>()
     for (i in xAxisData.indices) {
@@ -105,7 +150,6 @@ fun BarChart(
             chartFactory = { context ->
                 val chart = com.github.mikephil.charting.charts.BarChart(context)
                 chart.data = barData
-//                chart.setTouchEnabled(chartInfo.interact)
                 chart.setPinchZoom(chartInfo.zoomable)
                 chart.isDragEnabled = chartInfo.draggable
                 chart.isDoubleTapToZoomEnabled = false
@@ -127,6 +171,11 @@ fun BarChart(
 
                 chart.description.isEnabled = false
                 chart.legend.isEnabled = false
+
+                val chartListener = ChartListener()
+                chartListener.chart = chart
+                chartListener.onTranslate = onTranslate
+                chart.onChartGestureListener = chartListener
 
                 chart.invalidate()
                 chart

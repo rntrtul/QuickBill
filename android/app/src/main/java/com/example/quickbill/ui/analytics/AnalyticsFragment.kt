@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -62,13 +62,15 @@ fun SpendingTab(
     totalMeals: String = "43",
     onViewRangeChange: (ViewRange) -> Unit = { _ -> },
 ) {
+    val vm: AnalyticsViewModel = viewModel()
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
         ViewRangeSelector(
             selectedViewRange = selectedViewRange,
             onSelect = onViewRangeChange
         )
         BarChart(
-            viewRange = selectedViewRange
+            viewRange = selectedViewRange,
+            onTranslate = { start, end -> vm.spendingRangeChange(start, end) }
         )
         Row(
             modifier = Modifier
@@ -89,14 +91,17 @@ fun NutritionTab(
     averageCalories: String = "2300",
     onViewRangeChange: (ViewRange) -> Unit = { _ -> },
 ) {
-    // PieGraph of macronutrients, today andAVG
-    // Bar graph of calories per day
+    // max calories in 1 meal or 1 day?
+    val vm: AnalyticsViewModel = viewModel()
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
         ViewRangeSelector(
             selectedViewRange = selectedViewRange,
             onSelect = onViewRangeChange
         )
-        BarChart()
+        BarChart(
+            viewRange = selectedViewRange,
+            onTranslate = { start, end -> vm.nutritionRangeChange(start, end) }
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
