@@ -17,11 +17,11 @@ class AnalyticsViewModel : ViewModel() {
         })
     }
 
-    fun getNutritionData(foodName: String) {
+    fun getNutritionData(foodName: String? = null) {
         FirebaseManager.getData("testNutrition", object : FirebaseManager.MyCallback {
             override fun onCallback(item: Map<String,Any>) {
                 Log.d(TAG, "${item.toString()}")
             }
-        }, foodName)
+        })
     }
 }

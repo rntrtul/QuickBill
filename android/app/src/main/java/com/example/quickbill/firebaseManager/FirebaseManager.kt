@@ -62,7 +62,7 @@ class FirebaseManager {
         private var TAG = "FirebaseManager"
         private val baseURL = "https://api.calorieninjas.com/v1/"
         private var api_key = "RGnaYobkRoru061sUEV0cg==VR5GXMOyhcDU5kD7"
-        private var mOrderItems: ArrayList<Map<String,Any>> = ArrayList() // TODO: change type of object from OrderItem to something else
+        private var mOrderItems: ArrayList<Map<String,Any>> = ArrayList()
         private var mNutritionItems: ArrayList<Map<String,Any>> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
@@ -119,14 +119,14 @@ class FirebaseManager {
 
         // TODO : make a separate listener that listens for changes. Return the arraylist only
         // Operational
-        fun getData(collectionName: String, myCallback: MyCallback, foodName: String? = "None") {
+        fun getData(collectionName: String, myCallback: MyCallback, foodName: String? = null) {
 
             var snapshot: DocumentSnapshot? = null
             if (collectionName == "testFoodOrders") {
                 Log.d(TAG, collectionName)
                 snapshot = this.orderDocumentSnapshot
             } else if (collectionName == "testNutrition"){
-                assert((foodName != "None"))
+//                assert((foodName != "None"))
                 snapshot = this.nutritionDocumentSnapshot
             }
 //            Log.d(TAG,"Passed the snapshot section")
@@ -141,7 +141,7 @@ class FirebaseManager {
                     }
             } else {
                 db!!.collection(collectionName)
-                    .whereEqualTo("name", foodName)
+                    .whereEqualTo("userId", "0")
                     .get()
                     .addOnCompleteListener { task ->
                         parseTask(collectionName, task, myCallback)
@@ -215,9 +215,9 @@ class FirebaseManager {
                 val order: HashMap<String, Any> = HashMap()
                 order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
                 order.put("orderId", 0)
-                order.put("foodName", item.name)
+                order.put("foodName", item.name.lowercase())
                 try {
-                    order.put("foodVariantName", item.variationName)
+                    order.put("foodVariantName", item.variationName.lowercase())
                 } catch(e: Exception) {
                     order.put("foodVariantName", "")
                 }
@@ -230,6 +230,7 @@ class FirebaseManager {
                             TAG,
                             "Order added with ID: " + documentReference.id
                         )
+                        addItemToOrderItems(order)
                     }
                     .addOnFailureListener { e ->
                         Log.w(TAG, "Error adding document", e)
@@ -241,13 +242,13 @@ class FirebaseManager {
                 val foodItem: HashMap<String, Any> = HashMap()
                 foodItem.put("userId",0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
                 foodItem.put("date", infoDeser.date)
-                foodItem.put("foodName", item.name)
+                foodItem.put("foodName", item.name.lowercase())
                 try {
-                    foodItem.put("foodVariantName", item.variationName)
+                    foodItem.put("foodVariantName", item.variationName.lowercase())
                 } catch(e: Exception) {
                     foodItem.put("foodVariantName", "")
                 }
-                var nutritionInfo: NutritionInfo? = getNutrition(item.name)
+                var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
                 // TODO: instead of using item.name, use item
                 foodItem.put("calories", nutritionInfo?.calories.toString())
                 foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
@@ -267,6 +268,7 @@ class FirebaseManager {
                             TAG,
                             "Food item added with ID: " + documentReference.id
                         )
+                        addItemToNutritionItems(foodItem)
                     }
                     .addOnFailureListener { e ->
                         Log.w(TAG, "Error adding document", e)
