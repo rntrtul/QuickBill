@@ -216,6 +216,7 @@ class FirebaseManager {
                 order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
                 order.put("orderId", 0)
                 order.put("foodName", item.name.lowercase())
+                order.put("costCAD", item.totalMoney)
                 try {
                     order.put("foodVariantName", item.variationName.lowercase())
                 } catch(e: Exception) {
@@ -297,10 +298,9 @@ class FirebaseManager {
 //                override fun onCallback(item: Map<String,Any>) {
 //                    Log.d(TAG, "${item.toString()}")
 //                }
-//            }, foodName = "Sunflower Seeds")
-////            Log.d(TAG, "mOrderItems are: ${this.mOrderItems}")
-//
-//        }
+//            })
+//            Log.d(TAG, "mOrderItems are: ${this.mOrderItems}")
+
         }
     }
 
