@@ -35,6 +35,7 @@ import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.analytics.AnalyticsContent
 import com.example.quickbill.ui.pay.BillState
 import com.example.quickbill.ui.pay.BillView
+import com.example.quickbill.ui.pay.PaymentConfirmationContent
 import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.qr_code_manager.QRCodeCreatorContent
@@ -68,7 +69,6 @@ class MainActivity : AppCompatActivity() {
         StrictMode.setVmPolicy(builder.build())
     }
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(
             requestCode,
@@ -80,7 +80,9 @@ class MainActivity : AppCompatActivity() {
             CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {
                 override fun onResult(result: CardEntryActivityResult) {
                     Log.d("NETWORK LOG", "Card Entry Result: $result")
-                    handleCardEntryResult(result)
+                    setContent {
+                        handleCardEntryResult(result)
+                    }
                 }
             })
         }
@@ -124,6 +126,7 @@ sealed class Screen(
 
     object BillView : Screen("billView", R.string.title_bill, null, null, null)
     object QRCodeCreatorView : Screen("qrCodeCreatorView", R.string.qr_code_creator, null, null, null)
+    object PaymentConfirmation : Screen("paymentConfirmation", R.string.title_bill, null, null, null)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -156,6 +159,9 @@ fun MainContent() {
             }
             composable(Screen.QRCodeCreatorView.route) {
                 QRCodeCreatorContent(navController)
+            }
+            composable(Screen.PaymentConfirmation.route) {
+                PaymentConfirmationContent(navController)
             }
         }
     }
