@@ -40,10 +40,8 @@ data class NutritionInfo(
 )
 
 data class FirebaseOrderItem(
-    val foodName: String,
-    val userId: String,
-    val foodVariantName: String,
-    val orderId: String
+    val orderId: String,
+    val costCAD: String
 )
 
 
@@ -62,7 +60,7 @@ class FirebaseManager {
         private var TAG = "FirebaseManager"
         private val baseURL = "https://api.calorieninjas.com/v1/"
         private var api_key = "RGnaYobkRoru061sUEV0cg==VR5GXMOyhcDU5kD7"
-        private var mOrderItems: ArrayList<Map<String,Any>> = ArrayList()
+        private var mOrderItems: ArrayList<FirebaseOrderItem> = ArrayList()
         private var mNutritionItems: ArrayList<Map<String,Any>> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
@@ -72,7 +70,8 @@ class FirebaseManager {
 
         // Operational
         fun addItemToOrderItems(item: Map<String, Any>) {
-            this.mOrderItems.add(item)
+            var fb_item: FirebaseOrderItem = FirebaseOrderItem(orderId = item.get("orderId").toString(), costCAD = item.get("costCAD").toString())
+            this.mOrderItems.add(fb_item)
 //            Log.d(TAG, "Added item to mOrderItems")
         }
 
@@ -200,45 +199,38 @@ class FirebaseManager {
 
 
 
-        fun addOrderToFirebase(info: Response): Boolean {
-            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
+        fun addOrderToFirebase(infoDeser: Payment): Boolean {
+//            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
             var lineItems = infoDeser.lineItems
             var foodNames = ArrayList<Pair<String,String>>()
             var paidAmounts = ArrayList<Money>()
             var failed = 1
 
+            // Add to the orders collection (tracks mainly spending)
+            val order: HashMap<String, Any> = HashMap()
+            order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
+            order.put("orderId", 0)
+            order.put("lineItems", lineItems.toArray())
+            order.put("costCAD", infoDeser.totalMoney)
+
+            // Add order with a generated ID
+            db!!.collection("testFoodOrders")
+                .add(order)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(
+                        TAG,
+                        "Order added with ID: " + documentReference.id
+                    )
+                    addItemToOrderItems(order)
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    failed = 1
+                }
+
             for (item: OrderItem in lineItems) {
 //            foodNames.add(Pair(item.name,item.variationName))
 //            paidAmounts.add(item.totalMoney)
-
-                // Add to the orders collection (tracks mainly spending)
-                val order: HashMap<String, Any> = HashMap()
-                order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
-                order.put("orderId", 0)
-                order.put("foodName", item.name.lowercase())
-                order.put("costCAD", item.totalMoney)
-                try {
-                    order.put("foodVariantName", item.variationName.lowercase())
-                } catch(e: Exception) {
-                    order.put("foodVariantName", "")
-                }
-
-                // Add order with a generated ID
-                db!!.collection("testFoodOrders")
-                    .add(order)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d(
-                            TAG,
-                            "Order added with ID: " + documentReference.id
-                        )
-                        addItemToOrderItems(order)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w(TAG, "Error adding document", e)
-                        failed = 1
-                    }
-
-
                 // Add to the nutrition collection
                 val foodItem: HashMap<String, Any> = HashMap()
                 foodItem.put("userId",0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
@@ -294,7 +286,7 @@ class FirebaseManager {
 //            var res: NutritionInfo? = FirebaseManager.getNutrition("hotdog")
 //            print(res)
 
-//            FirebaseManager.getData("testNutrition", object : MyCallback {
+//            FirebaseManager.getData("testFoodOrders", object : MyCallback {
 //                override fun onCallback(item: Map<String,Any>) {
 //                    Log.d(TAG, "${item.toString()}")
 //                }
