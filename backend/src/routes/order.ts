@@ -68,10 +68,7 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
     };
     paymentBody.paymentIds = paymentIds;
 
-    const { result, ...httpResponse } = await ordersApi.payOrder(
-      orderId,
-      paymentBody
-    );
+    const { result, ...httpResponse } = await ordersApi.payOrder(orderId, paymentBody);
     const { statusCode, body } = httpResponse;
 
     res.status(statusCode).send(result.order);
@@ -81,71 +78,57 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
   }
 });
 
-router.get(
-  "/location/:locationId/table/:tableId",
-  async (req: Request, res: Response) => {
-    const { locationId, tableId } = req.params;
-    try {
-      const bodyQueryFilterStateFilterStates: string[] = ["OPEN"];
-      const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
-        states: bodyQueryFilterStateFilterStates,
-      };
+router.get("/location/:locationId/table/:tableId", async (req: Request, res: Response) => {
+  const { locationId, tableId } = req.params;
+  try {
+    const bodyQueryFilterStateFilterStates: string[] = ["OPEN"];
+    const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
+      states: bodyQueryFilterStateFilterStates,
+    };
 
-      console.log("get bill");
-      console.log("locationId", locationId);
-      console.log("tableId", tableId);
+    console.log("get bill");
+    console.log("locationId", locationId);
+    console.log("tableId", tableId);
 
-      const bodyQueryFilter: SearchOrdersFilter = {};
-      bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
+    const bodyQueryFilter: SearchOrdersFilter = {};
+    bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
 
-      const bodyQuery: SearchOrdersQuery = {};
-      bodyQuery.filter = bodyQueryFilter;
+    const bodyQuery: SearchOrdersQuery = {};
+    bodyQuery.filter = bodyQueryFilter;
 
-      const body: SearchOrdersRequest = {};
-      body.locationIds = [locationId];
-      body.query = bodyQuery;
+    const body: SearchOrdersRequest = {};
+    body.locationIds = [locationId];
+    body.query = bodyQuery;
 
-      const response = await ordersApi.searchOrders(body);
-      const order = response.result.orders?.find(
-        (order) => order.ticketName === tableId
-      );
-      const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
+    const response = await ordersApi.searchOrders(body);
+    const order = response.result.orders?.find((order) => order.ticketName === tableId);
+    const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
 
-      const orderData: OrderMeta = {
-        order,
-        userOrders,
-      };
+    const orderData: OrderMeta = {
+      order,
+      userOrders,
+    };
 
-      res.status(200).send(orderData);
-    } catch (error) {
-      console.log(error);
-      res.sendStatus(500);
-    }
+    res.status(200).send(orderData);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
-);
+});
 
 router.post("/square/update", async (req: Request, res: Response) => {
-  const { orderId } = req.params;
-  const { idempotencyKey, paymentIds } = req.body;
-
-  console.log("== Pay Order");
-  console.log("orderId", orderId);
-  console.log("idempotencyKey", idempotencyKey);
-  console.log("paymentIds", paymentIds);
-
   try {
-    const paymentBody: PayOrderRequest = {
-      idempotencyKey,
-    };
-    paymentBody.paymentIds = paymentIds;
+    const { data } = req.body;
+    const { type } = data;
+    let orderId;
 
-    const { result, ...httpResponse } = await ordersApi.payOrder(
-      orderId,
-      paymentBody
-    );
-    const { statusCode, body } = httpResponse;
+    if (type === "order") {
+      orderId = data.id;
+    } else if (type === "payment") {
+      orderId = data.object.order_id;
+    }
 
-    res.status(statusCode).send(result.order);
+    res.sendStatus(200);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
