@@ -30,6 +30,7 @@ data class Payment(
     val orderId: String,
     var lineItems: ArrayList<OrderItem>,
     var date: Date,
+    var createdAt: String
 )
 
 data class Money(

@@ -4,11 +4,13 @@ import android.util.Log
 import com.example.quickbill.ui.pay.Money
 import com.example.quickbill.ui.pay.OrderItem
 import com.example.quickbill.ui.pay.Payment
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.*
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QueryDocumentSnapshot
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -21,29 +23,59 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.util.*
 
-
 data class NutritionInfo(
-    val sugar_g: Double,
-    val fiber_g: Double,
-    val serving_size_g: Double,
-    val sodium_mg: Double,
-    val name: String,
-    val potassium_g: Double,
-    val fat_saturated_g: Double,
-    val fat_total_g: Double,
-    val calories: Double,
-    val cholesterol_mg: Double,
-    val protein_g: Double,
-    val carbohydrates_total_g: Double,
-    val userId: String,
-    var date: Date,
-    var orderId: String
-)
+    val sugar: Double = 0.0,
+    val fiber: Double = 0.0,
+    val serving_size: Double = 0.0,
+    val sodium: Double = 0.0,
+    val name: String = "",
+    val potassium: Double = 0.0,
+    val saturated_fat: Double = 0.0,
+    val fat: Double = 0.0,
+    val calories: Double = 0.0,
+    val cholesterol: Double = 0.0,
+    val protein: Double = 0.0,
+    val carbohydrates: Double = 0.0,
+    val userId: String = "",
+    var date: Date = Date(),
+) {
+    operator fun plus(other: NutritionInfo): NutritionInfo {
+        return NutritionInfo(
+            sugar = this.sugar + other.sugar,
+            fiber = this.fiber + other.fiber,
+            serving_size = this.serving_size + other.serving_size,
+            sodium = this.sodium + other.sodium,
+            potassium = this.potassium + other.potassium,
+            saturated_fat = this.saturated_fat + other.saturated_fat,
+            fat = this.fat + other.fat,
+            calories = this.calories + other.calories,
+            cholesterol = this.cholesterol + other.cholesterol,
+            protein = this.protein + other.protein,
+            carbohydrates = this.carbohydrates + other.carbohydrates,
+        )
+    }
+
+    operator fun div(num: Int): NutritionInfo {
+        return NutritionInfo(
+            sugar = this.sugar / num,
+            fiber = this.fiber / num,
+            serving_size = this.serving_size / num,
+            sodium = this.sodium / num,
+            potassium = this.potassium / num,
+            saturated_fat = this.saturated_fat / num,
+            fat = this.fat / num,
+            calories = this.calories / num,
+            cholesterol = this.cholesterol / num,
+            protein = this.protein / num,
+            carbohydrates = this.carbohydrates / num,
+        )
+    }
+}
 
 data class FirebaseOrderItem(
     val orderId: String,
-    val cost: Money?,
-    val date: String
+    val cost: Money = Money(0, "CAD"),
+    val date: Date = Date()
 )
 
 
@@ -54,7 +86,7 @@ class FirebaseManager {
     // https://api.calorieninjas.com/v1/nutrition?query=
 
     interface MyCallback {
-        fun onCallback(item: Map<String,Any>)
+        fun onCallback(items: List<Map<String, Any>>)
     }
 
     companion object {
@@ -63,7 +95,7 @@ class FirebaseManager {
         private val baseURL = "https://api.calorieninjas.com/v1/"
         private var api_key = "RGnaYobkRoru061sUEV0cg==VR5GXMOyhcDU5kD7"
         private var mOrderItems: ArrayList<FirebaseOrderItem> = ArrayList()
-        private var mNutritionItems: ArrayList<Map<String,Any>> = ArrayList()
+        private var mNutritionItems: ArrayList<Map<String, Any>> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
         private var auth: FirebaseAuth = Firebase.auth
@@ -72,11 +104,10 @@ class FirebaseManager {
 
         // Operational
         fun addItemToOrderItems(item: Map<String, Any>, money: Money? = null) {
-            var fb_item: FirebaseOrderItem = FirebaseOrderItem(orderId = item.get("orderId").toString()
-                , cost = money
-                , date=item.get("date").toString())
-//            , costCAD = Money(amount=item.get("costCAD").toString().toInt(), "CAD")
-//            , date = Date(item.get("date").toString().toLong()))
+            var fb_item: FirebaseOrderItem = FirebaseOrderItem(
+                orderId = item.get("orderId").toString(),
+            )
+
             this.mOrderItems.add(fb_item)
 //            Log.d(TAG, "Added item to mOrderItems")
         }
@@ -96,18 +127,20 @@ class FirebaseManager {
 //                Log.w(TAG, "Error getting documents.", task.exception)
 //            }
             if (task.isSuccessful) {
+                var items = arrayListOf<Map<String, Any>>()
                 for (document: QueryDocumentSnapshot in task.result) {
                     var item: Map<String, Any>
 //                    Log.d(TAG, "document is {${document.getData()}")
                     item = document.getData()
                     if (collectionName == "testFoodOrders") {
                         this.addItemToOrderItems(item)
-                        myCallback.onCallback(item)
+                        items.add(item)
                     } else if (collectionName == "testNutrition") {
                         this.mNutritionItems.add(item)
-                        myCallback.onCallback(item)
+                        items.add(item)
                     }
                 }
+                myCallback.onCallback(items)
                 if (!task.getResult().isEmpty) {
                     if (collectionName == "testFoodOrders") {
                         this.orderDocumentSnapshot = task.getResult().getDocuments()
@@ -122,6 +155,7 @@ class FirebaseManager {
             }
         }
 
+        // TODO : make a separate listener that listens for changes. Return the arraylist only
         // Operational
         fun getData(collectionName: String, myCallback: MyCallback, foodName: String? = null) {
 
@@ -129,7 +163,7 @@ class FirebaseManager {
             if (collectionName == "testFoodOrders") {
                 Log.d(TAG, collectionName)
                 snapshot = this.orderDocumentSnapshot
-            } else if (collectionName == "testNutrition"){
+            } else if (collectionName == "testNutrition") {
 //                assert((foodName != "None"))
                 snapshot = this.nutritionDocumentSnapshot
             }
@@ -137,7 +171,10 @@ class FirebaseManager {
 
             if (snapshot != null) {
                 db!!.collection(collectionName)
-                    .whereEqualTo("userId", "0") // TODO: auth.getCurrentUser()?.getUid().toString()
+                    .whereEqualTo(
+                        "userId",
+                        auth.getCurrentUser()?.getUid().toString()
+                    )
                     .startAfter(snapshot)
                     .get()
                     .addOnCompleteListener { task ->
@@ -145,7 +182,10 @@ class FirebaseManager {
                     }
             } else {
                 db!!.collection(collectionName)
-                    .whereEqualTo("userId", "0") // TODO: auth.getCurrentUser()?.getUid().toString()
+                    .whereEqualTo(
+                        "userId",
+                        auth.getCurrentUser()?.getUid().toString()
+                    )
                     .get()
                     .addOnCompleteListener { task ->
                         parseTask(collectionName, task, myCallback)
@@ -159,7 +199,7 @@ class FirebaseManager {
 //        fun getNutrition(item: OrderItem): NutritionInfo? {
             // May also add variant name
 //            val query_url = baseURL + "nutrition?query="+item.name;
-            val query_url = baseURL + "nutrition?query="+name;
+            val query_url = baseURL + "nutrition?query=" + name;
             val client = OkHttpClient()
             var nutritionInfo: NutritionInfo
             var responseBody: String = ""
@@ -197,18 +237,16 @@ class FirebaseManager {
                     NutritionInfo::class.java
                 )
                 Log.d(TAG, nutritionInfo.toString())
-                return nutritionInfo
             }
 
             return null
         }
 
 
-
         fun addOrderToFirebase(infoDeser: Payment): Boolean {
 //            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
             var lineItems = infoDeser.lineItems
-            var foodNames = ArrayList<Pair<String,String>>()
+            var foodNames = ArrayList<Pair<String, String>>()
             var paidAmounts = ArrayList<Money>()
             var failed = 1
 
@@ -221,7 +259,7 @@ class FirebaseManager {
 //            } catch (e: Exception) {
 //                order.put("lineItems", listOf(String))
 //            }
-            order.put("date", infoDeser.date)
+            order.put("date", infoDeser.createdAt)
             order.put("cost", infoDeser.totalMoney)
             Log.d(TAG, order.toString())
             // Add order with a generated ID
@@ -251,21 +289,21 @@ class FirebaseManager {
                     foodItem.put("foodName", item.name.lowercase())
                     try {
                         foodItem.put("foodVariantName", item.variationName.lowercase())
-                    } catch(e: Exception) {
+                    } catch (e: Exception) {
                         foodItem.put("foodVariantName", "")
                     }
                     var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
                     // TODO: instead of using item.name, use item
                     foodItem.put("calories", nutritionInfo?.calories.toString())
-                    foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
-                    foodItem.put("fat", nutritionInfo?.fat_total_g.toString())
-                    foodItem.put("saturated_fat", nutritionInfo?.fat_saturated_g.toString())
-                    foodItem.put("carbohydrates", nutritionInfo?.carbohydrates_total_g.toString())
-                    foodItem.put("protein", nutritionInfo?.protein_g.toString())
-                    foodItem.put("sodium", nutritionInfo?.sodium_mg.toString())
-                    foodItem.put("sugar", nutritionInfo?.sugar_g.toString())
-                    foodItem.put("fiber", nutritionInfo?.fiber_g.toString())
-                    foodItem.put("cholesterol", nutritionInfo?.cholesterol_mg.toString())
+                    foodItem.put("serving_size", nutritionInfo?.serving_size.toString())
+                    foodItem.put("fat", nutritionInfo?.fat.toString())
+                    foodItem.put("saturated_fat", nutritionInfo?.saturated_fat.toString())
+                    foodItem.put("carbohydrates", nutritionInfo?.carbohydrates.toString())
+                    foodItem.put("protein", nutritionInfo?.protein.toString())
+                    foodItem.put("sodium", nutritionInfo?.sodium.toString())
+                    foodItem.put("sugar", nutritionInfo?.sugar.toString())
+                    foodItem.put("fiber", nutritionInfo?.fiber.toString())
+                    foodItem.put("cholesterol", nutritionInfo?.cholesterol.toString())
 
                     db!!.collection("testNutrition")
                         .add(foodItem)
@@ -282,13 +320,12 @@ class FirebaseManager {
                         }
                 }
             }
-            return failed==0
+            return failed == 0
         }
 
         fun getAuth(): FirebaseAuth {
             return auth
         }
-
 
 
         fun initialize() {
