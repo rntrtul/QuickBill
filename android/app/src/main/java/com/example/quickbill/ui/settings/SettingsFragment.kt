@@ -5,10 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,15 +49,14 @@ fun SettingsContent(navController: NavController = rememberNavController()) {
 
     QuickBillTheme {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            text?.let {
-                Text(
-                    text = it, color = MaterialTheme.colorScheme.onBackground
-                )
-            }
             androidx.compose.material3.Button(
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 onClick = { navController.navigate(Screen.QRCodeCreatorView.route) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,10 +64,11 @@ fun SettingsContent(navController: NavController = rememberNavController()) {
             ) {
                 androidx.compose.material3.Text(
                     text = "Generate my QR codes (for restaurant owners)",
-                    style = MaterialTheme.typography.labelLarge
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             androidx.compose.material3.Button(
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 onClick = {
                     context.logOut()
                 },

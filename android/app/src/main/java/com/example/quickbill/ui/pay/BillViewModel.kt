@@ -12,6 +12,7 @@ import com.example.quickbill.api.API
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 
 
 class BillViewModel : ViewModel() {
@@ -21,21 +22,40 @@ class BillViewModel : ViewModel() {
     private var _billItems = billFromOrder()
     private var _paymentTotal by mutableStateOf(0)
     private val _isRefreshing = MutableStateFlow(false)
+    private var _counter by mutableStateOf(0)
 
     val items: List<BillItem> get() = _billItems
     val paymentTotal get() = _paymentTotal
     val isRefreshing get() = _isRefreshing.asStateFlow()
+    val counter get() = _counter
 
     private fun billFromOrder(): SnapshotStateList<BillItem> {
         Log.d("API LOG", "order item list: $_items")
         if (_items == null) {
             return listOf<BillItem>().toMutableStateList()
         }
+
+        val userOrders: List<UserOrder>? = BillState.instance.billResponse?.userOrders
+        _items!!.forEach { orderItem ->
+
+        }
+        if (userOrders != null) {
+            if (userOrders.isNotEmpty()) {
+
+            }
+        }
         val a = _items?.map { orderItem ->
+            var itemAmountPaid = 0
+            userOrders?.forEach { userOrder ->
+                itemAmountPaid += userOrder.items.filter { item -> item.itemId == orderItem.name }
+                    .sumOf { item -> item.amount.amount }
+            }
+
             BillItem(
                 order = orderItem,
+                amountPaid = Money(itemAmountPaid, "CAD"),
                 initialQuantitySelected = orderItem.quantity,
-                alreadyPaid = orderItem.totalMoney.amount == 0
+                alreadyPaid = orderItem.totalMoney.amount == itemAmountPaid
             )
         }
 
@@ -56,6 +76,7 @@ class BillViewModel : ViewModel() {
             _order = BillState.instance.billResponse?.order
             _items = _order?.lineItems?.toMutableStateList()
             _billItems = billFromOrder()
+            _counter += 1
             _isRefreshing.emit(false)
         }
     }
@@ -76,7 +97,7 @@ class BillViewModel : ViewModel() {
         }
     }
 
-    fun itemAmountPayingChange(item: BillItem, amount: Int){
+    fun itemAmountPayingChange(item: BillItem, amount: Int) {
         _billItems.find { it.order.name == item.order.name }?.let { it ->
             it.amountPaying.amount = amount
             calcPaymentTotal()
@@ -88,6 +109,6 @@ class BillViewModel : ViewModel() {
     }
 
     fun billTotal(): Int {
-        return _order!!.totalMoney.amount
+        return _order!!.totalMoney.amount - _billItems.sumOf { item -> item.amountPaid.amount }
     }
 }

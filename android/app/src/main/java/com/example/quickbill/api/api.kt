@@ -2,12 +2,10 @@ package com.example.quickbill.api
 
 
 import android.util.Log
-import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.firebaseManager.FirebaseManager
-import com.example.quickbill.ui.pay.BillResponse
-import com.example.quickbill.ui.pay.BillState
-import com.example.quickbill.ui.pay.Payment
+import com.example.quickbill.ui.pay.*
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -37,9 +35,9 @@ class API {
             val job = GlobalScope.launch(Dispatchers.IO) {
                 try {
                     result =
-                        URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum).readText()
+                        URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum + "/user/" + FirebaseManager.getAuth().currentUser?.uid).readText()
 
-                    Log.d("API LOG", "got result: $result")
+                    Log.d("API LOG", "Got Bill Result: $result")
                 } catch (e: Exception) {
                     Log.e("API", "$e")
                     Log.e("API", "Error calling bill")
@@ -79,7 +77,7 @@ class API {
                 payment = Gson().fromJson(response.body.string(), Payment::class.java)
                 Log.d("API", "Going to add to Firebase")
                 Log.d("API", payment.toString())
-                var res = FirebaseManager.addOrderToFirebase(payment)
+//                var res = FirebaseManager.addOrderToFirebase(payment)
             } catch (e: IOException) {
                 e.printStackTrace()
             }
