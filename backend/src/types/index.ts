@@ -28,3 +28,7 @@ export interface PaymentBody {
   amountMoney: number;
   userOrder: UserOrder;
 }
+
+export interface User {
+  firebaseMessagingToken: string;
+}

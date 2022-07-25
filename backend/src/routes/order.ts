@@ -11,9 +11,10 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 import db from "../db";
-import { OrderMeta } from "../types";
+import { OrderMeta, UserOrder } from "../types";
 
 import { ordersApi } from "../api/square";
+import { admin, messaging } from "../firebase";
 
 const router = express.Router();
 router.post("/example/table/:tableId", async (req: Request, res: Response) => {
@@ -121,12 +122,33 @@ router.post("/square/update", async (req: Request, res: Response) => {
     const { data } = req.body;
     const { type } = data;
     let orderId;
+    console.log("==SQUARE UPDATE");
+    console.log("data", data);
 
     if (type === "order") {
       orderId = data.id;
     } else if (type === "payment") {
       orderId = data.object.order_id;
     }
+
+    const userOrders: UserOrder[] = await db.order.getUserOrdersByOrderId(orderId);
+    const firebaseTokens: string[] = [];
+
+    for (const userOrder of userOrders) {
+      const user = await db.user.getUserById(userOrder.userId);
+      console.log("user", user);
+      if (user.firebaseMessagingToken) {
+        firebaseTokens.push(user.firebaseMessagingToken);
+      }
+    }
+
+    const message = {
+      data: { refresh: "true" },
+      tokens: firebaseTokens,
+    };
+    console.log("message", message);
+
+    await admin.messaging().sendMulticast(message);
 
     res.sendStatus(200);
   } catch (error) {
