@@ -261,8 +261,9 @@ class FirebaseManager {
 //            } catch (e: Exception) {
 //                order.put("lineItems", listOf(String))
 //            }
-            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-            order.put("date", LocalDate.parse(infoDeser.createdAt, formatter))
+//            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+//            order.put("date", LocalDate.parse(infoDeser.createdAt, DateTimeFormatter.ISO_INSTANT))
+            order.put("date", infoDeser.createdAt)
             order.put("cost", infoDeser.totalMoney)
             Log.d(TAG, order.toString())
             // Add order with a generated ID
