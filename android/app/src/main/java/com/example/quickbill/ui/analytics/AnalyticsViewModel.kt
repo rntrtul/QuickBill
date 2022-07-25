@@ -1,5 +1,6 @@
 package com.example.quickbill.ui.analytics
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -138,7 +139,7 @@ class AnalyticsViewModel : ViewModel() {
             override fun onCallback(items: List<Map<String, Any>>) {
                 val gson = Gson()
                 for (item in items) {
-//                    Log.d(TAG, "$item")
+                    Log.d(TAG, "$item")
                     //fixme: jank city
                     val cost =
                         if (item["costCAD"].toString() == "null")

@@ -21,6 +21,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 data class NutritionInfo(
@@ -259,7 +261,8 @@ class FirebaseManager {
 //            } catch (e: Exception) {
 //                order.put("lineItems", listOf(String))
 //            }
-            order.put("date", infoDeser.createdAt)
+            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+            order.put("date", LocalDate.parse(infoDeser.createdAt, formatter))
             order.put("cost", infoDeser.totalMoney)
             Log.d(TAG, order.toString())
             // Add order with a generated ID
