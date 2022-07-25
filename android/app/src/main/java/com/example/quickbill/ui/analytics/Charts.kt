@@ -1,6 +1,7 @@
 package com.example.quickbill.ui.analytics
 
 import android.content.Context
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.background
@@ -18,16 +19,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.quickbill.ui.theme.QuickBillTheme
-import com.example.quickbill.util.centsToDisplayedAmount
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import kotlin.random.Random
-
 
 data class ChartInfo(
     val title: String = "Spending per Day",
@@ -116,20 +114,15 @@ class ChartListener : OnChartGestureListener {
     override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
         onTranslate(chart?.lowestVisibleX!!, chart?.highestVisibleX!!)
     }
-}
 
-class MoneyValueFormatter : ValueFormatter() {
-    override fun getFormattedValue(value: Float): String {
-        return centsToDisplayedAmount(value.toInt())
-    }
 }
 
 @Preview
 @Composable
 fun BarChart(
     chartInfo: ChartInfo = ChartInfo(),
-    xAxisData: List<Float> = (0..10).map { num -> num.toFloat() },
-    yAxisData: List<Float> = (0..10).map { Random.nextFloat() * 30 },
+    xAxisData: List<Float> = (0..400).map { num -> num.toFloat() },
+    yAxisData: List<Float> = (0..400).map { Random.nextFloat() * 30 },
     xAxisBarLabels: List<String> = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
     viewRange: ViewRange = ViewRange.WEEK,
     dataLabel: String = "foobar",
@@ -137,16 +130,14 @@ fun BarChart(
 ) {
     val entries = ArrayList<BarEntry>()
     for (i in xAxisData.indices) {
-        entries.add(BarEntry(xAxisData[i].toFloat(), yAxisData[i]))
+        entries.add(BarEntry(xAxisData[i], yAxisData[i]))
     }
     val dataSet = BarDataSet(entries, dataLabel)
     dataSet.setDrawValues(false)
 
     QuickBillTheme {
-        val defaultColour = MaterialTheme.colorScheme.tertiary.toArgb()
-
         if (chartInfo.colours.isEmpty()) {
-            dataSet.color = defaultColour
+            dataSet.color = MaterialTheme.colorScheme.tertiary.toArgb()
         } else {
             dataSet.colors = chartInfo.colours.map { color -> color.toArgb() }
         }
@@ -171,8 +162,6 @@ fun BarChart(
                 chart.axisLeft.granularity = 1f
                 chart.axisLeft.textColor = textColour
                 chart.axisLeft.axisLineColor = textColour
-                chart.axisLeft.axisMinimum = 0f
-                chart.axisLeft.valueFormatter = MoneyValueFormatter()
 
                 chart.xAxis.setDrawGridLines(false)
                 chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
@@ -187,8 +176,6 @@ fun BarChart(
                 chartListener.chart = chart
                 chartListener.onTranslate = onTranslate
                 chart.onChartGestureListener = chartListener
-
-                onTranslate(chart.lowestVisibleX, chart.highestVisibleX)
 
                 chart.invalidate()
                 chart
@@ -258,6 +245,7 @@ fun LineChart(
                 chart.description.isEnabled = false
                 chart.legend.isEnabled = false
 
+
                 chart.invalidate()
                 chart
             }
@@ -270,30 +258,28 @@ fun LineChart(
 @Composable
 fun PieChart(
     title: String = "MacroNutrients",
-    data: List<Float> = listOf(30.8f, 18.5f, 26.7f, 24.0f),
+    percentData: List<Float> = listOf(30.8f, 18.5f, 26.7f, 24.0f),
     labels: List<String> = listOf("Protein", "Carbs", "Sugar", "Fats"),
     colours: List<Color> = listOf(
-        Color(239, 100, 97),
-        Color(228, 179, 99),
-        Color(62, 120, 178),
-        Color(115, 186, 155),
-        Color(76, 46, 5),
+        Color.Magenta,
+        Color.Red,
+        Color.Green,
+        Color.Cyan
     )
 ) {
     val entries = ArrayList<PieEntry>()
-    for (i in data.indices) {
-        entries.add(PieEntry(data[i], ""))
+    for (i in percentData.indices) {
+        entries.add(PieEntry(percentData[i], ""))
     }
 
     val pieDataSet = PieDataSet(entries, "MacroNutrients")
     pieDataSet.colors = colours.map { color -> color.toArgb() }
 
-    val pieData = PieData(pieDataSet)
+    val data = PieData(pieDataSet)
 
     QuickBillTheme {
         val backgroundColour = MaterialTheme.colorScheme.background.toArgb()
         Row(
-            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -304,7 +290,7 @@ fun PieChart(
                         .height(220.dp),
                     factory = { context ->
                         val chart = com.github.mikephil.charting.charts.PieChart(context)
-                        chart.data = pieData
+                        chart.data = data
 
                         chart.holeRadius = 70.dp.value
                         chart.setHoleColor(backgroundColour)
@@ -313,7 +299,6 @@ fun PieChart(
                         chart.description.isEnabled = false
                         chart.isRotationEnabled = false
                         chart.data.setDrawValues(false)
-                        chart.setUsePercentValues(false)
 
                         chart.invalidate()
                         chart
@@ -327,7 +312,7 @@ fun PieChart(
                     text = title,
                     style = MaterialTheme.typography.labelLarge
                 )
-                for (i in data.indices) {
+                for (i in percentData.indices) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -337,7 +322,7 @@ fun PieChart(
                                 .padding(4.dp)
                         )
                         Text(
-                            text = "${labels[i]} (${"%.2f".format(data[i])}g)",
+                            text = "${labels[i]} (${percentData[i]}g)",
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(start = 4.dp)
                         )

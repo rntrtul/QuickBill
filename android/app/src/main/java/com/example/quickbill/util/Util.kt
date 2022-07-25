@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 // Used for displaying prices and amount to pay.
 fun centsToDisplayedAmount(amount: Int): String {
@@ -52,16 +50,6 @@ fun validateMoneyAmount(
     return true
 }
 
-fun daysBetween(start: Date, end: Date, endIncluded: Boolean = false): Int {
-    val days = TimeUnit.DAYS.convert(end.time - start.time, TimeUnit.MILLISECONDS).toInt()
-    return if (endIncluded) days + 1 else days
-}
-
-fun timestampToDate(ts: String) : Date {
-    //fixme: jank city
-    val seconds = ts.split("seconds")[1].split(",")[0].drop(1).toLong()
-    return Date(seconds * 1000)
-}
 
 fun Context.getActivity(): AppCompatActivity? = when (this) {
     is AppCompatActivity -> this
