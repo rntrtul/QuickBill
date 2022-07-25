@@ -1,7 +1,9 @@
 package com.example.quickbill.ui.analytics
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -52,6 +54,7 @@ fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
                     selectedViewRange = vm.nutritionViewRange,
                     dataReady = vm.nutritionDataReady,
                     averageCalories = vm.averageCalories,
+                    calorieMax = vm.calorieMax,
                     calorieXData = vm.calorieXData,
                     calorieYData = vm.calorieYData,
                     calorieLabels = vm.calorieLabels,
@@ -64,6 +67,7 @@ fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Preview
 @Composable
 fun SpendingTab(
@@ -77,7 +81,7 @@ fun SpendingTab(
     onViewRangeChange: (ViewRange) -> Unit = { _ -> },
     onTranslate: (Float, Float) -> Unit = { _, _ -> }
 ) {
-    AnimatedVisibility(visible = dataReady, enter = slideInVertically()) {
+    AnimatedVisibility(visible = dataReady, enter = scaleIn(), exit = fadeOut()) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
             ViewRangeSelector(
                 selectedViewRange = selectedViewRange,
@@ -103,12 +107,14 @@ fun SpendingTab(
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Preview
 @Composable
 fun NutritionTab(
     selectedViewRange: ViewRange = ViewRange.WEEK,
     dataReady: Boolean = true,
     averageCalories: String = "2300",
+    calorieMax: String = "25",
     calorieXData: List<Float> = listOf(0f, 1f),
     calorieLabels: List<String> = listOf("a", "a"),
     calorieYData: List<Float> = listOf(1f, 2f),
@@ -117,13 +123,17 @@ fun NutritionTab(
     onTranslate: (Float, Float) -> Unit = { _, _ -> }
 ) {
     // max calories in 1 meal or 1 day?
-    AnimatedVisibility(visible = dataReady) {
+    AnimatedVisibility(visible = dataReady, enter = scaleIn()) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
             ViewRangeSelector(
                 selectedViewRange = selectedViewRange,
                 onSelect = onViewRangeChange
             )
             BarChart(
+                chartInfo = ChartInfo(
+                    title = "Calories per Day",
+                    yAxisName = "Calories (kCal)",
+                ),
                 xAxisData = calorieXData,
                 yAxisData = calorieYData,
                 xAxisBarLabels = calorieLabels,
@@ -137,6 +147,8 @@ fun NutritionTab(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 InfoBox(label = "Average Calories", info = "$averageCalories kCal")
+                InfoBox(label = "Max Calories", info = "$calorieMax kCal")
+
             }
             PieChart(
                 data = listOf(

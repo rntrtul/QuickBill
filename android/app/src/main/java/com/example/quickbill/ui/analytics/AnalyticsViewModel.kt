@@ -1,6 +1,5 @@
 package com.example.quickbill.ui.analytics
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -48,6 +47,7 @@ class AnalyticsViewModel : ViewModel() {
     private var _calorieYData = mutableListOf<Float>()
     private var _calorieLabels = mutableListOf<String>()
     private var _nutritionAverage = NutritionInfo()
+    private var _calorieMax by mutableStateOf(0)
 
     private var _averageCalories: Int by mutableStateOf(0)
 
@@ -66,6 +66,7 @@ class AnalyticsViewModel : ViewModel() {
     val averageCost: String get() = centsToDisplayedAmount(_averageCost)
     val averageCalories: String get() = _averageCalories.toString()
     val totalMeals: String get() = _totalMeals.toString()
+    val calorieMax: String get() = _calorieMax.toString()
 
     val calorieXData get() = _calorieXData
     val calorieYData get() = _calorieYData
@@ -90,6 +91,8 @@ class AnalyticsViewModel : ViewModel() {
 
         val entries = viewedNutrition.count { item -> item != 0f }
         _averageCalories = (viewedNutrition.sum() / entries).toInt()
+        _calorieMax =
+            if (viewedNutrition.isNotEmpty()) viewedNutrition.maxOf { item -> item.toInt() } else 0
     }
 
     private fun spendingDataToChart() {
@@ -98,7 +101,8 @@ class AnalyticsViewModel : ViewModel() {
         val days = daysBetween(minDate, maxDate, endIncluded = true)
 
         _spendingLabels = (1..days).map { offset -> "$offset" }.toMutableList()
-        _spendingXData = (1..days).map { i -> i.toFloat() }.toMutableList()
+        _spendingXData =
+            (1..days).map { i -> i.toFloat() }.toMutableList()
         _spendingYData = (0 until days).map { 0f }.toMutableList()
 
         _spendingData.forEach { item ->
@@ -113,8 +117,9 @@ class AnalyticsViewModel : ViewModel() {
         val maxDate = _nutritionData.maxOf { item -> item.date }
         val days = max(daysBetween(minDate, maxDate, endIncluded = true), 7)
 
-        _calorieXData = (1..days).map { i -> i.toFloat() }.toMutableList()
-        _calorieYData = (0 until days).map { _ -> 0f }.toMutableList()
+        _calorieXData =
+            (1..days).map { i -> i.toFloat() }.toMutableList()
+        _calorieYData = (0 until days).map { 0f }.toMutableList()
         _calorieLabels = (1..days).map { offset -> "${offset + 1}" }.toMutableList()
 
         _nutritionData.forEach { item ->
@@ -133,7 +138,7 @@ class AnalyticsViewModel : ViewModel() {
             override fun onCallback(items: List<Map<String, Any>>) {
                 val gson = Gson()
                 for (item in items) {
-                    Log.d(TAG, "$item")
+//                    Log.d(TAG, "$item")
                     //fixme: jank city
                     val cost =
                         if (item["costCAD"].toString() == "null")
@@ -158,14 +163,13 @@ class AnalyticsViewModel : ViewModel() {
             override fun onCallback(items: List<Map<String, Any>>) {
                 val gson = Gson()
                 items.forEach { item ->
-                    Log.d(TAG, "$item")
+//                    Log.d(TAG, "$item")
                     val split = item.toString().split(",")
                     val nameDateLess = "{" + (
                             split.subList(2, 8) + split.subList(11, split.size)
                             ).joinToString { c -> c }
                     val info = gson.fromJson(nameDateLess, NutritionInfo::class.java)
                     info.date = timestampToDate(split[0] + "," + split[1])
-                    Log.d(TAG, "$info.toString() ____ $nameDateLess")
                     _nutritionData.add(info)
                 }
                 nutritionDataToChart()

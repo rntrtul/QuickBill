@@ -18,13 +18,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.quickbill.ui.theme.QuickBillTheme
+import com.example.quickbill.util.centsToDisplayedAmount
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import kotlin.random.Random
+
 
 data class ChartInfo(
     val title: String = "Spending per Day",
@@ -113,15 +116,20 @@ class ChartListener : OnChartGestureListener {
     override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
         onTranslate(chart?.lowestVisibleX!!, chart?.highestVisibleX!!)
     }
+}
 
+class MoneyValueFormatter : ValueFormatter() {
+    override fun getFormattedValue(value: Float): String {
+        return centsToDisplayedAmount(value.toInt())
+    }
 }
 
 @Preview
 @Composable
 fun BarChart(
     chartInfo: ChartInfo = ChartInfo(),
-    xAxisData: List<Float> = (0..400).map { num -> num.toFloat() },
-    yAxisData: List<Float> = (0..400).map { Random.nextFloat() * 30 },
+    xAxisData: List<Float> = (0..10).map { num -> num.toFloat() },
+    yAxisData: List<Float> = (0..10).map { Random.nextFloat() * 30 },
     xAxisBarLabels: List<String> = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
     viewRange: ViewRange = ViewRange.WEEK,
     dataLabel: String = "foobar",
@@ -129,7 +137,7 @@ fun BarChart(
 ) {
     val entries = ArrayList<BarEntry>()
     for (i in xAxisData.indices) {
-        entries.add(BarEntry(xAxisData[i], yAxisData[i]))
+        entries.add(BarEntry(xAxisData[i].toFloat(), yAxisData[i]))
     }
     val dataSet = BarDataSet(entries, dataLabel)
     dataSet.setDrawValues(false)
@@ -163,6 +171,8 @@ fun BarChart(
                 chart.axisLeft.granularity = 1f
                 chart.axisLeft.textColor = textColour
                 chart.axisLeft.axisLineColor = textColour
+                chart.axisLeft.axisMinimum = 0f
+                chart.axisLeft.valueFormatter = MoneyValueFormatter()
 
                 chart.xAxis.setDrawGridLines(false)
                 chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
