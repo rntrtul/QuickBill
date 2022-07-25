@@ -41,7 +41,7 @@ router.post("/", async (req: Request, res: Response) => {
     );
 
     let total: bigint = BigInt(0);
-    const paymentIds = [];
+    const paymentIds: string[] = [];
     for (const userOrder of userOrders) {
       total += userOrder.amount?.amount || BigInt(0);
     }
