@@ -1,7 +1,6 @@
 package com.example.quickbill.ui.analytics
 
 import android.content.Context
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.background
@@ -136,8 +135,10 @@ fun BarChart(
     dataSet.setDrawValues(false)
 
     QuickBillTheme {
+        val defaultColour = MaterialTheme.colorScheme.tertiary.toArgb()
+
         if (chartInfo.colours.isEmpty()) {
-            dataSet.color = MaterialTheme.colorScheme.tertiary.toArgb()
+            dataSet.color = defaultColour
         } else {
             dataSet.colors = chartInfo.colours.map { color -> color.toArgb() }
         }
@@ -176,6 +177,8 @@ fun BarChart(
                 chartListener.chart = chart
                 chartListener.onTranslate = onTranslate
                 chart.onChartGestureListener = chartListener
+
+                onTranslate(chart.lowestVisibleX, chart.highestVisibleX)
 
                 chart.invalidate()
                 chart

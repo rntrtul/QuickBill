@@ -4,11 +4,13 @@ import android.util.Log
 import com.example.quickbill.ui.pay.Money
 import com.example.quickbill.ui.pay.OrderItem
 import com.example.quickbill.ui.pay.Payment
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.*
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QueryDocumentSnapshot
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +43,8 @@ data class NutritionInfo(
 
 data class FirebaseOrderItem(
     val orderId: String,
-    val costCAD: String
+    val costCAD: Int,
+    val date: Date = Date()
 )
 
 
@@ -52,7 +55,7 @@ class FirebaseManager {
     // https://api.calorieninjas.com/v1/nutrition?query=
 
     interface MyCallback {
-        fun onCallback(item: Map<String,Any>)
+        fun onCallback(items: List<Map<String, Any>>)
     }
 
     companion object {
@@ -61,7 +64,7 @@ class FirebaseManager {
         private val baseURL = "https://api.calorieninjas.com/v1/"
         private var api_key = "RGnaYobkRoru061sUEV0cg==VR5GXMOyhcDU5kD7"
         private var mOrderItems: ArrayList<FirebaseOrderItem> = ArrayList()
-        private var mNutritionItems: ArrayList<Map<String,Any>> = ArrayList()
+        private var mNutritionItems: ArrayList<Map<String, Any>> = ArrayList()
         private var orderDocumentSnapshot: DocumentSnapshot? = null
         private var nutritionDocumentSnapshot: DocumentSnapshot? = null
         private var auth: FirebaseAuth = Firebase.auth
@@ -70,7 +73,10 @@ class FirebaseManager {
 
         // Operational
         fun addItemToOrderItems(item: Map<String, Any>) {
-            var fb_item: FirebaseOrderItem = FirebaseOrderItem(orderId = item.get("orderId").toString(), costCAD = item.get("costCAD").toString())
+            val fb_item: FirebaseOrderItem = FirebaseOrderItem(
+                orderId = item["orderId"].toString(),
+                costCAD = item["costCAD"].toString().toInt()
+            )
             this.mOrderItems.add(fb_item)
 //            Log.d(TAG, "Added item to mOrderItems")
         }
@@ -90,18 +96,20 @@ class FirebaseManager {
 //                Log.w(TAG, "Error getting documents.", task.exception)
 //            }
             if (task.isSuccessful) {
+                var items = arrayListOf<Map<String, Any>>()
                 for (document: QueryDocumentSnapshot in task.result) {
                     var item: Map<String, Any>
 //                    Log.d(TAG, "document is {${document.getData()}")
                     item = document.getData()
                     if (collectionName == "testFoodOrders") {
                         this.addItemToOrderItems(item)
-                        myCallback.onCallback(item)
+                        items.add(item)
                     } else if (collectionName == "testNutrition") {
                         this.mNutritionItems.add(item)
-                        myCallback.onCallback(item)
+                        items.add(item)
                     }
                 }
+                myCallback.onCallback(items)
                 if (!task.getResult().isEmpty) {
                     if (collectionName == "testFoodOrders") {
                         this.orderDocumentSnapshot = task.getResult().getDocuments()
@@ -124,7 +132,7 @@ class FirebaseManager {
             if (collectionName == "testFoodOrders") {
                 Log.d(TAG, collectionName)
                 snapshot = this.orderDocumentSnapshot
-            } else if (collectionName == "testNutrition"){
+            } else if (collectionName == "testNutrition") {
 //                assert((foodName != "None"))
                 snapshot = this.nutritionDocumentSnapshot
             }
@@ -154,7 +162,7 @@ class FirebaseManager {
 //        fun getNutrition(item: OrderItem): NutritionInfo? {
             // May also add variant name
 //            val query_url = baseURL + "nutrition?query="+item.name;
-            val query_url = baseURL + "nutrition?query="+name;
+            val query_url = baseURL + "nutrition?query=" + name;
             val client = OkHttpClient()
             var nutritionInfo: NutritionInfo
             var responseBody: String = ""
@@ -198,11 +206,10 @@ class FirebaseManager {
         }
 
 
-
         fun addOrderToFirebase(infoDeser: Payment): Boolean {
 //            var infoDeser = Gson().fromJson(info.body.string(), Payment::class.java)
             var lineItems = infoDeser.lineItems
-            var foodNames = ArrayList<Pair<String,String>>()
+            var foodNames = ArrayList<Pair<String, String>>()
             var paidAmounts = ArrayList<Money>()
             var failed = 1
 
@@ -233,12 +240,12 @@ class FirebaseManager {
 //            paidAmounts.add(item.totalMoney)
                 // Add to the nutrition collection
                 val foodItem: HashMap<String, Any> = HashMap()
-                foodItem.put("userId",0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
+                foodItem.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
                 foodItem.put("date", infoDeser.date)
                 foodItem.put("foodName", item.name.lowercase())
                 try {
                     foodItem.put("foodVariantName", item.variationName.lowercase())
-                } catch(e: Exception) {
+                } catch (e: Exception) {
                     foodItem.put("foodVariantName", "")
                 }
                 var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
@@ -268,13 +275,12 @@ class FirebaseManager {
                         failed = 1
                     }
             }
-            return failed==0
+            return failed == 0
         }
 
         fun getAuth(): FirebaseAuth {
             return auth
         }
-
 
 
         fun initialize() {
