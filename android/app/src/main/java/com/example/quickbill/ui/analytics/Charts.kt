@@ -248,7 +248,6 @@ fun LineChart(
                 chart.description.isEnabled = false
                 chart.legend.isEnabled = false
 
-
                 chart.invalidate()
                 chart
             }
@@ -261,28 +260,30 @@ fun LineChart(
 @Composable
 fun PieChart(
     title: String = "MacroNutrients",
-    percentData: List<Float> = listOf(30.8f, 18.5f, 26.7f, 24.0f),
+    data: List<Float> = listOf(30.8f, 18.5f, 26.7f, 24.0f),
     labels: List<String> = listOf("Protein", "Carbs", "Sugar", "Fats"),
     colours: List<Color> = listOf(
-        Color.Magenta,
-        Color.Red,
-        Color.Green,
-        Color.Cyan
+        Color(239, 100, 97),
+        Color(228, 179, 99),
+        Color(62, 120, 178),
+        Color(115, 186, 155),
+        Color(76, 46, 5),
     )
 ) {
     val entries = ArrayList<PieEntry>()
-    for (i in percentData.indices) {
-        entries.add(PieEntry(percentData[i], ""))
+    for (i in data.indices) {
+        entries.add(PieEntry(data[i], ""))
     }
 
     val pieDataSet = PieDataSet(entries, "MacroNutrients")
     pieDataSet.colors = colours.map { color -> color.toArgb() }
 
-    val data = PieData(pieDataSet)
+    val pieData = PieData(pieDataSet)
 
     QuickBillTheme {
         val backgroundColour = MaterialTheme.colorScheme.background.toArgb()
         Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -293,7 +294,7 @@ fun PieChart(
                         .height(220.dp),
                     factory = { context ->
                         val chart = com.github.mikephil.charting.charts.PieChart(context)
-                        chart.data = data
+                        chart.data = pieData
 
                         chart.holeRadius = 70.dp.value
                         chart.setHoleColor(backgroundColour)
@@ -302,6 +303,7 @@ fun PieChart(
                         chart.description.isEnabled = false
                         chart.isRotationEnabled = false
                         chart.data.setDrawValues(false)
+                        chart.setUsePercentValues(false)
 
                         chart.invalidate()
                         chart
@@ -315,7 +317,7 @@ fun PieChart(
                     text = title,
                     style = MaterialTheme.typography.labelLarge
                 )
-                for (i in percentData.indices) {
+                for (i in data.indices) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -325,7 +327,7 @@ fun PieChart(
                                 .padding(4.dp)
                         )
                         Text(
-                            text = "${labels[i]} (${percentData[i]}g)",
+                            text = "${labels[i]} (${"%.2f".format(data[i])}g)",
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(start = 4.dp)
                         )

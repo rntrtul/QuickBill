@@ -57,6 +57,12 @@ fun daysBetween(start: Date, end: Date, endIncluded: Boolean = false): Int {
     return if (endIncluded) days + 1 else days
 }
 
+fun timestampToDate(ts: String) : Date {
+    //fixme: jank city
+    val seconds = ts.split("seconds")[1].split(",")[0].drop(1).toLong()
+    return Date(seconds * 1000)
+}
+
 fun Context.getActivity(): AppCompatActivity? = when (this) {
     is AppCompatActivity -> this
     is ContextWrapper -> baseContext.getActivity()

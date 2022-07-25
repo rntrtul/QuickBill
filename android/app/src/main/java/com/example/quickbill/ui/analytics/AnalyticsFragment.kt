@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.quickbill.firebaseManager.NutritionInfo
 import com.example.quickbill.ui.theme.QuickBillTheme
 
 @Preview
@@ -45,14 +46,18 @@ fun AnalyticsContent(vm: AnalyticsViewModel = viewModel()) {
                     spendingLabels = vm.spendingLabels,
                     spendingYData = vm.spendingYData,
                     onViewRangeChange = { viewRange -> vm.spendingViewRangeChange(viewRange) },
-                    onTranslate = { start, end -> vm.spendingRangeChange(start, end) }
+                    onTranslate = { start, end -> vm.spendingRangeChange(start, end) },
                 )
                 1 -> NutritionTab(
                     selectedViewRange = vm.nutritionViewRange,
+                    dataReady = vm.nutritionDataReady,
                     averageCalories = vm.averageCalories,
-                    onViewRangeChange = { viewRange ->
-                        vm.nutritionViewRangeChange(viewRange)
-                    }
+                    calorieXData = vm.calorieXData,
+                    calorieYData = vm.calorieYData,
+                    calorieLabels = vm.calorieLabels,
+                    nutritionAvg = vm.nutritionAverage,
+                    onViewRangeChange = { viewRange -> vm.nutritionViewRangeChange(viewRange) },
+                    onTranslate = { start, end -> vm.nutritionRangeChange(start, end) },
                 )
             }
         }
@@ -83,7 +88,7 @@ fun SpendingTab(
                 yAxisData = spendingYData,
                 xAxisBarLabels = spendingLabels,
                 viewRange = selectedViewRange,
-                onTranslate = { start, end -> onTranslate(start, end) }
+                onTranslate = onTranslate
             )
             Row(
                 modifier = Modifier
@@ -102,31 +107,47 @@ fun SpendingTab(
 @Composable
 fun NutritionTab(
     selectedViewRange: ViewRange = ViewRange.WEEK,
+    dataReady: Boolean = true,
     averageCalories: String = "2300",
+    calorieXData: List<Float> = listOf(0f, 1f),
+    calorieLabels: List<String> = listOf("a", "a"),
+    calorieYData: List<Float> = listOf(1f, 2f),
+    nutritionAvg: NutritionInfo = NutritionInfo(),
     onViewRangeChange: (ViewRange) -> Unit = { _ -> },
+    onTranslate: (Float, Float) -> Unit = { _, _ -> }
 ) {
     // max calories in 1 meal or 1 day?
-    val vm: AnalyticsViewModel = viewModel()
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        ViewRangeSelector(
-            selectedViewRange = selectedViewRange,
-            onSelect = onViewRangeChange
-        )
-        BarChart(
-            viewRange = selectedViewRange,
-            onTranslate = { start, end -> vm.nutritionRangeChange(start, end) }
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            InfoBox(label = "Average Calories", info = "$averageCalories kCal")
+    AnimatedVisibility(visible = dataReady) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            ViewRangeSelector(
+                selectedViewRange = selectedViewRange,
+                onSelect = onViewRangeChange
+            )
+            BarChart(
+                xAxisData = calorieXData,
+                yAxisData = calorieYData,
+                xAxisBarLabels = calorieLabels,
+                viewRange = selectedViewRange,
+                onTranslate = onTranslate,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                InfoBox(label = "Average Calories", info = "$averageCalories kCal")
+            }
+            PieChart(
+                data = listOf(
+                    nutritionAvg.protein.toFloat(),
+                    nutritionAvg.fat.toFloat(),
+                    nutritionAvg.carbohydrates.toFloat()
+                ),
+                labels = listOf("Protein", "Fat", "Carbs")
+            )
         }
-        PieChart()
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

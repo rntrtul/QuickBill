@@ -23,24 +23,54 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.util.*
 
-
 data class NutritionInfo(
-    val sugar_g: Double,
-    val fiber_g: Double,
-    val serving_size_g: Double,
-    val sodium_mg: Double,
-    val name: String,
-    val potassium_g: Double,
-    val fat_saturated_g: Double,
-    val fat_total_g: Double,
-    val calories: Double,
-    val cholesterol_mg: Double,
-    val protein_g: Double,
-    val carbohydrates_total_g: Double,
-    val userId: String,
-    var date: Date,
-    var orderId: String
-)
+    val sugar: Double = 0.0,
+    val fiber: Double = 0.0,
+    val serving_size: Double = 0.0,
+    val sodium: Double = 0.0,
+    val name: String = "",
+    val potassium: Double = 0.0,
+    val saturated_fat: Double = 0.0,
+    val fat: Double = 0.0,
+    val calories: Double = 0.0,
+    val cholesterol: Double = 0.0,
+    val protein: Double = 0.0,
+    val carbohydrates: Double = 0.0,
+    val userId: String = "",
+    var date: Date = Date(),
+) {
+    operator fun plus(other: NutritionInfo): NutritionInfo {
+        return NutritionInfo(
+            sugar = this.sugar + other.sugar,
+            fiber = this.fiber + other.fiber,
+            serving_size = this.serving_size + other.serving_size,
+            sodium = this.sodium + other.sodium,
+            potassium = this.potassium + other.potassium,
+            saturated_fat = this.saturated_fat + other.saturated_fat,
+            fat = this.fat + other.fat,
+            calories = this.calories + other.calories,
+            cholesterol = this.cholesterol + other.cholesterol,
+            protein = this.protein + other.protein,
+            carbohydrates = this.carbohydrates + other.carbohydrates,
+        )
+    }
+
+    operator fun div(num: Int): NutritionInfo {
+        return NutritionInfo(
+            sugar = this.sugar / num,
+            fiber = this.fiber / num,
+            serving_size = this.serving_size / num,
+            sodium = this.sodium / num,
+            potassium = this.potassium / num,
+            saturated_fat = this.saturated_fat / num,
+            fat = this.fat / num,
+            calories = this.calories / num,
+            cholesterol = this.cholesterol / num,
+            protein = this.protein / num,
+            carbohydrates = this.carbohydrates / num,
+        )
+    }
+}
 
 data class FirebaseOrderItem(
     val orderId: String,
@@ -265,15 +295,15 @@ class FirebaseManager {
                     var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
                     // TODO: instead of using item.name, use item
                     foodItem.put("calories", nutritionInfo?.calories.toString())
-                    foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
-                    foodItem.put("fat", nutritionInfo?.fat_total_g.toString())
-                    foodItem.put("saturated_fat", nutritionInfo?.fat_saturated_g.toString())
-                    foodItem.put("carbohydrates", nutritionInfo?.carbohydrates_total_g.toString())
-                    foodItem.put("protein", nutritionInfo?.protein_g.toString())
-                    foodItem.put("sodium", nutritionInfo?.sodium_mg.toString())
-                    foodItem.put("sugar", nutritionInfo?.sugar_g.toString())
-                    foodItem.put("fiber", nutritionInfo?.fiber_g.toString())
-                    foodItem.put("cholesterol", nutritionInfo?.cholesterol_mg.toString())
+                    foodItem.put("serving_size", nutritionInfo?.serving_size.toString())
+                    foodItem.put("fat", nutritionInfo?.fat.toString())
+                    foodItem.put("saturated_fat", nutritionInfo?.saturated_fat.toString())
+                    foodItem.put("carbohydrates", nutritionInfo?.carbohydrates.toString())
+                    foodItem.put("protein", nutritionInfo?.protein.toString())
+                    foodItem.put("sodium", nutritionInfo?.sodium.toString())
+                    foodItem.put("sugar", nutritionInfo?.sugar.toString())
+                    foodItem.put("fiber", nutritionInfo?.fiber.toString())
+                    foodItem.put("cholesterol", nutritionInfo?.cholesterol.toString())
 
                     db!!.collection("testNutrition")
                         .add(foodItem)
