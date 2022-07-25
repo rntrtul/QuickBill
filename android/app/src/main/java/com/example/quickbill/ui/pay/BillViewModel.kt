@@ -49,6 +49,7 @@ class BillViewModel : ViewModel() {
     }
 
     fun refreshBill() {
+        Log.d("BILLVIEWMODEL", "==Refresh Bill")
         viewModelScope.launch {
             _isRefreshing.emit(true)
             API.callBill(BillState.instance)

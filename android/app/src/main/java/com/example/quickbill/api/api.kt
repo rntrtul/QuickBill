@@ -82,6 +82,29 @@ class API {
 
             return payment
         }
+
+        fun sendFirebaseToken(userId: String, token: String) {
+            val url = baseURL + "user/" + userId + "/update-firebase-token"
+
+            val requestBody = JSONObject()
+            requestBody.put("token", token)
+
+            val client = OkHttpClient()
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val body = requestBody.toString().toRequestBody(mediaType)
+
+            val request: Request = Request.Builder()
+                .url(url)
+                .post(body)
+                .build()
+            val response: Response?
+            try {
+                response = client.newCall(request).execute()
+                Log.d("NETWORK LOG", "Response Firebase: $response")
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
     }
 }
 

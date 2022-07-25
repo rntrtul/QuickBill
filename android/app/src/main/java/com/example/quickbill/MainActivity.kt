@@ -5,12 +5,12 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
+import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,20 +29,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.quickbill.api.API
 import com.example.quickbill.databinding.ActivityMainBinding
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.analytics.AnalyticsContent
-import com.example.quickbill.ui.pay.BillState
 import com.example.quickbill.ui.pay.BillView
-import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.qr_code_manager.QRCodeCreatorContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
-import com.example.quickbill.util.centsToDisplayedAmount
-import com.example.quickbill.ui.pay.*
 import com.example.quickbill.util.handleCardEntryResult
 import com.example.quickbill.util.isCardEntryRequestCode
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import sqip.CardEntry
 import sqip.CardEntry.setCardNonceBackgroundHandler
 import sqip.CardEntryActivityResult
@@ -66,6 +64,27 @@ class MainActivity : AppCompatActivity() {
         // Code needed to be able to show the generated QR code file without doing any unnecessary work.
         val builder = VmPolicy.Builder()
         StrictMode.setVmPolicy(builder.build())
+
+        val policy = ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+            val userId = FirebaseManager.getAuth().currentUser?.uid
+            Log.d("FIREBASE MESSAGING", "token: $token")
+            Log.d("FIREBASE MESSAGING", "userId: $userId")
+            if (userId != null) {
+                API.sendFirebaseToken(userId, token)
+            }
+
+        })
+
+
     }
 
 
@@ -75,6 +94,7 @@ class MainActivity : AppCompatActivity() {
             resultCode,
             data
         ) // Ignore the fact that it's deprecated.
+
 
         if (isCardEntryRequestCode(requestCode)) {
             CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {

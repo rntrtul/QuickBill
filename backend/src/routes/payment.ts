@@ -9,13 +9,7 @@ import db from "../db";
 const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
-  const {
-    sourceId,
-    idempotencyKey,
-    amountMoney,
-    orderId,
-    userOrder,
-  }: PaymentBody = req.body;
+  const { sourceId, idempotencyKey, amountMoney, orderId, userOrder }: PaymentBody = req.body;
   const money: Money = { amount: BigInt(amountMoney), currency: "CAD" };
   console.log("money", money);
 
@@ -29,7 +23,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     const { result, ...httpResponse } = await paymentsApi.createPayment(body);
-
+    userOrder.paymentId = result.payment?.id;
     await db.order.addUserOrderToOrder(orderId, userOrder);
 
     console.log("result.payment", result.payment);

@@ -10,6 +10,7 @@ export interface UserOrder {
   userId: string;
   items?: OrderItem[];
   amount?: Money;
+  paymentId?: string;
 }
 
 export interface FirebaseOrder {
