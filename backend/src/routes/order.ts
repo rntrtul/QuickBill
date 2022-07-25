@@ -6,13 +6,17 @@ import {
   SearchOrdersQuery,
   SearchOrdersRequest,
   PayOrderRequest,
+  Order,
 } from "square";
 import { v4 as uuidv4 } from "uuid";
 
+import db from "../db";
+import { OrderMeta, UserOrder } from "../types";
+
 import { ordersApi } from "../api/square";
+import { admin } from "../firebase";
 
 const router = express.Router();
-
 router.post("/example/table/:tableId", async (req: Request, res: Response) => {
   try {
     const { tableId } = req.params;
@@ -99,8 +103,54 @@ router.get("/location/:locationId/table/:tableId", async (req: Request, res: Res
 
     const response = await ordersApi.searchOrders(body);
     const order = response.result.orders?.find((order) => order.ticketName === tableId);
+    const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
 
-    res.status(200).send(order);
+    const orderData: OrderMeta = {
+      order,
+      userOrders,
+    };
+
+    res.status(200).send(orderData);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+router.post("/square/update", async (req: Request, res: Response) => {
+  try {
+    const { data } = req.body;
+    const { type } = data;
+    let orderId;
+    console.log("==SQUARE UPDATE");
+    console.log("data", data);
+
+    if (type === "order") {
+      orderId = data.id;
+    } else if (type === "payment") {
+      orderId = data.object.order_id;
+    }
+
+    const userOrders: UserOrder[] = await db.order.getUserOrdersByOrderId(orderId);
+    const firebaseTokens: string[] = [];
+
+    for (const userOrder of userOrders) {
+      const user = await db.user.getUserById(userOrder.userId);
+      console.log("user", user);
+      if (user.firebaseMessagingToken) {
+        firebaseTokens.push(user.firebaseMessagingToken);
+      }
+    }
+
+    const message = {
+      data: { refresh: "true" },
+      tokens: firebaseTokens,
+    };
+    console.log("message", message);
+
+    await admin.messaging().sendMulticast(message);
+
+    res.sendStatus(200);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
