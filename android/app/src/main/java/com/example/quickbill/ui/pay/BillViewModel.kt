@@ -22,10 +22,12 @@ class BillViewModel : ViewModel() {
     private var _billItems = billFromOrder()
     private var _paymentTotal by mutableStateOf(0)
     private val _isRefreshing = MutableStateFlow(false)
+    private var _counter by mutableStateOf(0)
 
     val items: List<BillItem> get() = _billItems
     val paymentTotal get() = _paymentTotal
     val isRefreshing get() = _isRefreshing.asStateFlow()
+    val counter get() = _counter
 
     private fun billFromOrder(): SnapshotStateList<BillItem> {
         Log.d("API LOG", "order item list: $_items")
@@ -74,6 +76,7 @@ class BillViewModel : ViewModel() {
             _order = BillState.instance.billResponse?.order
             _items = _order?.lineItems?.toMutableStateList()
             _billItems = billFromOrder()
+            _counter += 1
             _isRefreshing.emit(false)
         }
     }
@@ -106,6 +109,6 @@ class BillViewModel : ViewModel() {
     }
 
     fun billTotal(): Int {
-        return _order!!.totalMoney.amount
+        return _order!!.totalMoney.amount - _billItems.sumOf { item -> item.amountPaid.amount }
     }
 }

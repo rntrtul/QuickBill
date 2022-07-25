@@ -50,6 +50,7 @@ fun BillView(billViewModel: BillViewModel = viewModel()) {
     if (restaurantName == null) restaurantName = BillState.instance.locationId
 
     val isRefreshing by billViewModel.isRefreshing.collectAsState()
+    val count = billViewModel.counter
 
     QuickBillTheme {
         Box {
