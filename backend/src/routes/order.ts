@@ -14,7 +14,7 @@ import db from "../db";
 import { OrderMeta, UserOrder } from "../types";
 
 import { ordersApi } from "../api/square";
-import { admin, messaging } from "../firebase";
+import { admin } from "../firebase";
 
 const router = express.Router();
 router.post("/example/table/:tableId", async (req: Request, res: Response) => {
