@@ -131,6 +131,7 @@ fun BillList(
                 itemName = item.order.name,
                 itemCost = item.order.basePriceMoney,
                 itemSelected = item.selected,
+                itemAmountPaid = item.amountPaid,
                 itemAlreadyPaid = item.alreadyPaid,
                 itemQuantity = item.order.quantity,
                 quantitySelected = item.quantitySelected,
@@ -150,6 +151,7 @@ fun BillList(
 fun LineItem(
     itemName: String = "Sushi",
     itemCost: Money = Money(2005, "CAD"),
+    itemAmountPaid: Money = Money(1200, "CAD"),
     itemSelected: Boolean = false,
     itemAlreadyPaid: Boolean = false,
     itemQuantity: Int = 2,
