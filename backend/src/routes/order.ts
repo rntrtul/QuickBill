@@ -83,6 +83,49 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
 });
 
 router.get(
+  "/location/:locationId/table/:tableId",
+  async (req: Request, res: Response) => {
+    const { locationId, tableId } = req.params;
+    try {
+      const bodyQueryFilterStateFilterStates: string[] = ["OPEN"];
+      const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
+        states: bodyQueryFilterStateFilterStates,
+      };
+
+      console.log("==GET BILL");
+      console.log("locationId", locationId);
+      console.log("tableId", tableId);
+
+      const bodyQueryFilter: SearchOrdersFilter = {};
+      bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
+
+      const bodyQuery: SearchOrdersQuery = {};
+      bodyQuery.filter = bodyQueryFilter;
+
+      const body: SearchOrdersRequest = {};
+      body.locationIds = [locationId];
+      body.query = bodyQuery;
+
+      const response = await ordersApi.searchOrders(body);
+      const order = response.result.orders?.find(
+        (order) => order.ticketName === tableId
+      );
+      const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
+
+      const orderData: OrderMeta = {
+        order,
+        userOrders,
+      };
+
+      res.status(200).send(orderData);
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(500);
+    }
+  }
+);
+
+router.get(
   "/location/:locationId/table/:tableId/user/:userId",
   async (req: Request, res: Response) => {
     const { locationId, tableId, userId } = req.params;
@@ -92,7 +135,7 @@ router.get(
         states: bodyQueryFilterStateFilterStates,
       };
 
-      console.log("==GET BILL");
+      console.log("==GET BILL WITH USER");
       console.log("locationId", locationId);
       console.log("tableId", tableId);
       console.log("userId", userId);
