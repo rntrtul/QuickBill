@@ -3,9 +3,15 @@ package com.example.quickbill.util
 import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.quickbill.MainContent
+import com.example.quickbill.Screen
 import com.example.quickbill.api.API
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.pay.*
+import com.example.quickbill.ui.theme.QuickBillTheme
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -96,28 +102,18 @@ fun makePayment(nonce: String): Payment? {
     return API.sendPaymentRequest(requestBody)
 }
 
-
-fun handleShowPaymentSuccessful(context: Context) {
-    val alertDialog = AlertDialog.Builder(context)
-    alertDialog.setTitle("Payment Successful")
-//    val billResponse: billResponse? = BillState.instance.billResponse
-//    val amountPaid = order?.totalMoney?.amount!!.toInt()
-//    alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
-    alertDialog.setPositiveButton("Done") { dialog, _ ->
-        dialog.dismiss()
-    }
-    alertDialog.show()
+@Composable
+fun handleShowPaymentSuccessful() {
+    MainContent(true)
 }
 
 
+@Composable
 fun handleCardEntryResult(result: CardEntryActivityResult) {
     Log.d("NETWORK LOG", "Card Entry Result: $result")
     if (result.isSuccess()) {
-//        val cardResult: CardDetails = result.getSuccessValue()
-//        val card: Card = cardResult.card
-//        val nonce = cardResult.nonce
         Log.d("NETWORK LOG", "Card Entry Result Success")
-        // handleShowPaymentSuccessful()
+        handleShowPaymentSuccessful()
     } else if (result.isCanceled()) {
         Log.d("NETWORK LOG", "Invalid Card Entered")
         // TODO

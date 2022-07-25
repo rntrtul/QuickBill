@@ -25,15 +25,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.Navigation
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.quickbill.api.API
+import androidx.navigation.findNavController
 import com.example.quickbill.databinding.ActivityMainBinding
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.ui.analytics.AnalyticsContent
 import com.example.quickbill.ui.pay.BillView
+import com.example.quickbill.ui.pay.PaymentConfirmationContent
+import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.ui.pay.PayContent
 import com.example.quickbill.ui.qr_code_manager.QRCodeCreatorContent
 import com.example.quickbill.ui.settings.SettingsContent
@@ -87,7 +91,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(
             requestCode,
@@ -100,7 +103,9 @@ class MainActivity : AppCompatActivity() {
             CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {
                 override fun onResult(result: CardEntryActivityResult) {
                     Log.d("NETWORK LOG", "Card Entry Result: $result")
-                    handleCardEntryResult(result)
+                    setContent {
+                        handleCardEntryResult( result)
+                    }
                 }
             })
         }
@@ -144,13 +149,17 @@ sealed class Screen(
 
     object BillView : Screen("billView", R.string.title_bill, null, null, null)
     object QRCodeCreatorView : Screen("qrCodeCreatorView", R.string.qr_code_creator, null, null, null)
+    object PaymentConfirmation : Screen("paymentConfirmation", R.string.title_bill, null, null, null)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent() {
+fun MainContent(paymentDone: Boolean = false) {
     val navController = rememberNavController()
-
+    var startDestination = Screen.PayBill.route
+    if (paymentDone) {
+        startDestination = Screen.PaymentConfirmation.route
+    }
     Scaffold(
         bottomBar = { NavBar(navController = navController) },
         modifier = Modifier
@@ -159,7 +168,7 @@ fun MainContent() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.PayBill.route,
+            startDestination = startDestination,
             Modifier.padding(innerPadding)
         ) {
             composable(Screen.Analytics.route) {
@@ -176,6 +185,9 @@ fun MainContent() {
             }
             composable(Screen.QRCodeCreatorView.route) {
                 QRCodeCreatorContent(navController)
+            }
+            composable(Screen.PaymentConfirmation.route) {
+                PaymentConfirmationContent(navController)
             }
         }
     }
