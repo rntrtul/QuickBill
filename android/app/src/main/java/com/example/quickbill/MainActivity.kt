@@ -43,9 +43,11 @@ import com.example.quickbill.ui.qr_code_manager.QRCodeCreatorContent
 import com.example.quickbill.ui.settings.SettingsContent
 import com.example.quickbill.ui.theme.QuickBillTheme
 import com.example.quickbill.util.handleCardEntryResult
-import com.example.quickbill.util.isCardEntryRequestCode
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import com.example.quickbill.util.centsToDisplayedAmount
+import com.example.quickbill.ui.pay.*
+import com.example.quickbill.util.PaymentUtil
 import sqip.CardEntry
 import sqip.CardEntry.setCardNonceBackgroundHandler
 import sqip.CardEntryActivityResult
@@ -98,8 +100,7 @@ class MainActivity : AppCompatActivity() {
             data
         ) // Ignore the fact that it's deprecated.
 
-
-        if (isCardEntryRequestCode(requestCode)) {
+        if (PaymentUtil.isCardEntryRequestCode(requestCode)) {
             CardEntry.handleActivityResult(data, object : sqip.Callback<CardEntryActivityResult> {
                 override fun onResult(result: CardEntryActivityResult) {
                     Log.d("NETWORK LOG", "Card Entry Result: $result")

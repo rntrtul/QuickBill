@@ -2,12 +2,10 @@ package com.example.quickbill.api
 
 
 import android.util.Log
-import com.example.quickbill.ui.pay.Order
 import com.example.quickbill.firebaseManager.FirebaseManager
-import com.example.quickbill.ui.pay.BillResponse
-import com.example.quickbill.ui.pay.BillState
-import com.example.quickbill.ui.pay.Payment
+import com.example.quickbill.ui.pay.*
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -39,7 +37,7 @@ class API {
                     result =
                         URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum).readText()
 
-                    Log.d("API LOG", "got result: $result")
+                    Log.d("API LOG", "Got Bill Result: $result")
                 } catch (e: Exception) {
                     Log.e("API", "$e")
                     Log.e("API", "Error calling bill")

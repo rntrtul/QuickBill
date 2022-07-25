@@ -4,12 +4,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.quickbill.util.centsToDisplayedAmount
+import com.google.firebase.firestore.auth.User
+import org.json.JSONArray
 import java.util.*
 import kotlin.collections.ArrayList
 
 data class BillResponse(
     val order: Order,
-    val userOrdersStr: String
+    val userOrders: List<UserOrder>
+)
+
+data class UserOrder(
+    val userId: String,
+    val items: List<SquareItem>,
+    val amount: Int
+)
+
+data class SquareItem(
+    val itemId: String,
+    val amount: Money,
+    val quantity: Int
 )
 
 data class Order(
@@ -53,6 +67,7 @@ data class OrderItem(
 class BillItem(
     val order: OrderItem,
     var alreadyPaid: Boolean = false,
+    var amountPaid : Money = Money(0, "CAD"),
     initialSelected: Boolean = false,
     initialQuantitySelected: Int = 1,
     initialAmountPaying: Money = Money(0, ""),
