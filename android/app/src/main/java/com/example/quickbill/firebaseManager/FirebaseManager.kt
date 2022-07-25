@@ -173,8 +173,8 @@ class FirebaseManager {
                 db!!.collection(collectionName)
                     .whereEqualTo(
                         "userId",
-                        "dDt6YV3MEwf6zlt0bleX1j3avsj1"
-                    ) // TODO: auth.getCurrentUser()?.getUid().toString()
+                        auth.getCurrentUser()?.getUid().toString()
+                    )
                     .startAfter(snapshot)
                     .get()
                     .addOnCompleteListener { task ->
@@ -184,8 +184,8 @@ class FirebaseManager {
                 db!!.collection(collectionName)
                     .whereEqualTo(
                         "userId",
-                        "dDt6YV3MEwf6zlt0bleX1j3avsj1"
-                    ) // TODO: auth.getCurrentUser()?.getUid().toString()
+                        auth.getCurrentUser()?.getUid().toString()
+                    )
                     .get()
                     .addOnCompleteListener { task ->
                         parseTask(collectionName, task, myCallback)
@@ -259,7 +259,7 @@ class FirebaseManager {
 //            } catch (e: Exception) {
 //                order.put("lineItems", listOf(String))
 //            }
-            order.put("date", infoDeser.date)
+            order.put("date", infoDeser.createdAt)
             order.put("cost", infoDeser.totalMoney)
             Log.d(TAG, order.toString())
             // Add order with a generated ID
