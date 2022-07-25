@@ -8,7 +8,7 @@ const addUserOrderToOrder = async (orderId: string, userOrder: UserOrder) => {
 
     if (orderSnap.exists()) {
       await updateDoc(orderSnap.ref, {
-        user_orders: arrayUnion(userOrder),
+        userOrders: arrayUnion(userOrder),
       });
     } else {
       const firebaseOrder: FirebaseOrder = { userOrders: [userOrder] };
