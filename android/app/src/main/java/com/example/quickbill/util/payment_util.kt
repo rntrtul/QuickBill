@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.quickbill.MainContent
 import com.example.quickbill.Screen
 import com.example.quickbill.api.API
 import com.example.quickbill.firebaseManager.FirebaseManager
@@ -102,17 +104,7 @@ fun makePayment(nonce: String): Payment? {
 
 @Composable
 fun handleShowPaymentSuccessful() {
-//    val alertDialog = AlertDialog.Builder(context)
-//    alertDialog.setTitle("Payment Successful")
-//    val billResponse: billResponse? = BillState.instance.billResponse
-//    val amountPaid = order?.totalMoney?.amount!!.toInt()
-//    alertDialog.setMessage("Paid ${centsToDisplayedAmount(amountPaid)}!")
-//    alertDialog.setPositiveButton("Done") { dialog, _ ->
-//        dialog.dismiss()
-//    }
-//    alertDialog.show()
-
-    PaymentConfirmationContent()
+    MainContent(true)
 }
 
 
@@ -120,9 +112,6 @@ fun handleShowPaymentSuccessful() {
 fun handleCardEntryResult(result: CardEntryActivityResult) {
     Log.d("NETWORK LOG", "Card Entry Result: $result")
     if (result.isSuccess()) {
-//        val cardResult: CardDetails = result.getSuccessValue()
-//        val card: Card = cardResult.card
-//        val nonce = cardResult.nonce
         Log.d("NETWORK LOG", "Card Entry Result Success")
         handleShowPaymentSuccessful()
     } else if (result.isCanceled()) {
