@@ -35,7 +35,7 @@ class API {
             val job = GlobalScope.launch(Dispatchers.IO) {
                 try {
                     result =
-                        URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum).readText()
+                        URL(baseURL + "order/" + "location/" + billState.locationId + "/table/" + billState.tableNum + "/user/" + FirebaseManager.getAuth().currentUser?.uid).readText()
 
                     Log.d("API LOG", "Got Bill Result: $result")
                 } catch (e: Exception) {
