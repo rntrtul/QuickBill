@@ -45,8 +45,12 @@ router.post("/", async (req: Request, res: Response) => {
     for (const userOrder of userOrders) {
       total += userOrder.amount?.amount || BigInt(0);
     }
-
+    console.log("total");
+    console.log("paymentIds", paymentIds);
+    console.log("order?.totalMoney", order?.totalMoney);
     if (order?.totalMoney?.amount && total >= order?.totalMoney?.amount) {
+      console.log("==PAY ORDER");
+
       const idempotencyKey = uuidv4();
       const paymentBody: PayOrderRequest = {
         idempotencyKey,
@@ -58,6 +62,8 @@ router.post("/", async (req: Request, res: Response) => {
         paymentBody
       );
     }
+    console.log("PAY ORDER result", result);
+    console.log("PAY ORDER httpResponse.statusCode", httpResponse.statusCode);
 
     console.log("result.payment", result.payment);
     res.status(httpResponse.statusCode).send(result.payment);

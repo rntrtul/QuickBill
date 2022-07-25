@@ -184,10 +184,6 @@ router.post("/square/update", async (req: Request, res: Response) => {
       orderId = data.object.order_id;
     }
 
-    // const userOrders: UserOrder[] = await db.order.getUserOrdersByOrderId(
-    //   orderId
-    // );
-
     const userIds: string[] = await db.order.getUsersByOrderId(orderId);
     const firebaseTokens: string[] = [];
 
