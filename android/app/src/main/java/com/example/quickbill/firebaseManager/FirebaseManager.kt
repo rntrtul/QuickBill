@@ -39,11 +39,12 @@ data class NutritionInfo(
     val carbohydrates_total_g: Double,
     val userId: String,
     var date: Date,
+    var orderId: String
 )
 
 data class FirebaseOrderItem(
     val orderId: String,
-    val costCAD: Int,
+    val cost: Money = Money(0, "CAD"),
     val date: Date = Date()
 )
 
@@ -72,11 +73,11 @@ class FirebaseManager {
         // to reference currently signed user - auth.currentUser
 
         // Operational
-        fun addItemToOrderItems(item: Map<String, Any>) {
-            val fb_item: FirebaseOrderItem = FirebaseOrderItem(
-                orderId = item["orderId"].toString(),
-                costCAD = item["costCAD"].toString().toInt()
+        fun addItemToOrderItems(item: Map<String, Any>, money: Money? = null) {
+            var fb_item: FirebaseOrderItem = FirebaseOrderItem(
+                orderId = item.get("orderId").toString(),
             )
+
             this.mOrderItems.add(fb_item)
 //            Log.d(TAG, "Added item to mOrderItems")
         }
@@ -140,7 +141,10 @@ class FirebaseManager {
 
             if (snapshot != null) {
                 db!!.collection(collectionName)
-                    .whereEqualTo("userId", "0")
+                    .whereEqualTo(
+                        "userId",
+                        "dDt6YV3MEwf6zlt0bleX1j3avsj1"
+                    ) // TODO: auth.getCurrentUser()?.getUid().toString()
                     .startAfter(snapshot)
                     .get()
                     .addOnCompleteListener { task ->
@@ -148,7 +152,10 @@ class FirebaseManager {
                     }
             } else {
                 db!!.collection(collectionName)
-                    .whereEqualTo("userId", "0")
+                    .whereEqualTo(
+                        "userId",
+                        "dDt6YV3MEwf6zlt0bleX1j3avsj1"
+                    ) // TODO: auth.getCurrentUser()?.getUid().toString()
                     .get()
                     .addOnCompleteListener { task ->
                         parseTask(collectionName, task, myCallback)
@@ -215,11 +222,16 @@ class FirebaseManager {
 
             // Add to the orders collection (tracks mainly spending)
             val order: HashMap<String, Any> = HashMap()
-            order.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
-            order.put("orderId", 0)
-            order.put("lineItems", lineItems.toArray())
-            order.put("costCAD", infoDeser.totalMoney)
-
+            order.put("userId", auth.getCurrentUser()?.getUid().toString())
+            order.put("orderId", infoDeser.id.toString())
+//            try {
+//                order.put("lineItems", lineItems.toArray())
+//            } catch (e: Exception) {
+//                order.put("lineItems", listOf(String))
+//            }
+            order.put("date", infoDeser.date)
+            order.put("cost", infoDeser.totalMoney)
+            Log.d(TAG, order.toString())
             // Add order with a generated ID
             db!!.collection("testFoodOrders")
                 .add(order)
@@ -228,52 +240,55 @@ class FirebaseManager {
                         TAG,
                         "Order added with ID: " + documentReference.id
                     )
-                    addItemToOrderItems(order)
+                    addItemToOrderItems(order, infoDeser.totalMoney)
                 }
                 .addOnFailureListener { e ->
                     Log.w(TAG, "Error adding document", e)
                     failed = 1
                 }
 
-            for (item: OrderItem in lineItems) {
+            if (lineItems != null && !lineItems.isEmpty()) {
+                for (item: OrderItem in lineItems) {
 //            foodNames.add(Pair(item.name,item.variationName))
 //            paidAmounts.add(item.totalMoney)
-                // Add to the nutrition collection
-                val foodItem: HashMap<String, Any> = HashMap()
-                foodItem.put("userId", 0) // FirebaseAuth.getInstance().getCurrentUser().getUid()
-                foodItem.put("date", infoDeser.date)
-                foodItem.put("foodName", item.name.lowercase())
-                try {
-                    foodItem.put("foodVariantName", item.variationName.lowercase())
-                } catch (e: Exception) {
-                    foodItem.put("foodVariantName", "")
-                }
-                var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
-                // TODO: instead of using item.name, use item
-                foodItem.put("calories", nutritionInfo?.calories.toString())
-                foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
-                foodItem.put("fat", nutritionInfo?.fat_total_g.toString())
-                foodItem.put("saturated_fat", nutritionInfo?.fat_saturated_g.toString())
-                foodItem.put("carbohydrates", nutritionInfo?.carbohydrates_total_g.toString())
-                foodItem.put("protein", nutritionInfo?.protein_g.toString())
-                foodItem.put("sodium", nutritionInfo?.sodium_mg.toString())
-                foodItem.put("sugar", nutritionInfo?.sugar_g.toString())
-                foodItem.put("fiber", nutritionInfo?.fiber_g.toString())
-                foodItem.put("cholesterol", nutritionInfo?.cholesterol_mg.toString())
+                    // Add to the nutrition collection
+                    val foodItem: HashMap<String, Any> = HashMap()
+                    foodItem.put("userId", auth.getCurrentUser()?.getUid().toString())
+                    foodItem.put("orderId", 0) //TODO: inforDeser.id
+                    foodItem.put("date", infoDeser.date)
+                    foodItem.put("foodName", item.name.lowercase())
+                    try {
+                        foodItem.put("foodVariantName", item.variationName.lowercase())
+                    } catch (e: Exception) {
+                        foodItem.put("foodVariantName", "")
+                    }
+                    var nutritionInfo: NutritionInfo? = getNutrition(item.name.lowercase())
+                    // TODO: instead of using item.name, use item
+                    foodItem.put("calories", nutritionInfo?.calories.toString())
+                    foodItem.put("serving_size", nutritionInfo?.serving_size_g.toString())
+                    foodItem.put("fat", nutritionInfo?.fat_total_g.toString())
+                    foodItem.put("saturated_fat", nutritionInfo?.fat_saturated_g.toString())
+                    foodItem.put("carbohydrates", nutritionInfo?.carbohydrates_total_g.toString())
+                    foodItem.put("protein", nutritionInfo?.protein_g.toString())
+                    foodItem.put("sodium", nutritionInfo?.sodium_mg.toString())
+                    foodItem.put("sugar", nutritionInfo?.sugar_g.toString())
+                    foodItem.put("fiber", nutritionInfo?.fiber_g.toString())
+                    foodItem.put("cholesterol", nutritionInfo?.cholesterol_mg.toString())
 
-                db!!.collection("testNutrition")
-                    .add(foodItem)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d(
-                            TAG,
-                            "Food item added with ID: " + documentReference.id
-                        )
-                        addItemToNutritionItems(foodItem)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w(TAG, "Error adding document", e)
-                        failed = 1
-                    }
+                    db!!.collection("testNutrition")
+                        .add(foodItem)
+                        .addOnSuccessListener { documentReference ->
+                            Log.d(
+                                TAG,
+                                "Food item added with ID: " + documentReference.id
+                            )
+                            addItemToNutritionItems(foodItem)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w(TAG, "Error adding document", e)
+                            failed = 1
+                        }
+                }
             }
             return failed == 0
         }

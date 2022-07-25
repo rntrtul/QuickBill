@@ -7,8 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.quickbill.firebaseManager.FirebaseManager
 import com.example.quickbill.firebaseManager.FirebaseOrderItem
+import com.example.quickbill.ui.pay.Money
 import com.example.quickbill.util.centsToDisplayedAmount
 import com.example.quickbill.util.daysBetween
+import com.google.gson.Gson
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -86,7 +88,7 @@ class AnalyticsViewModel : ViewModel() {
         _spendingLabels = (1..days).map { offset -> "${offset + 1}" }.toMutableList()
 
         _spendingData.forEach { item ->
-            _spendingYData[daysBetween(minDate, item.date)] = item.costCAD.toFloat()
+            _spendingYData[daysBetween(minDate, item.date)] = item.cost!!.amount.toFloat()
         }
         spendingDataReady = true
         spendingInfoCalc()
@@ -95,15 +97,21 @@ class AnalyticsViewModel : ViewModel() {
     private fun getOrderData() {
         FirebaseManager.getData("testFoodOrders", object : FirebaseManager.MyCallback {
             override fun onCallback(items: List<Map<String, Any>>) {
+                val gson = Gson()
                 for (item in items) {
-//                    Log.d(TAG, "$item")
+                    Log.d(TAG, "$item")
                     //fixme: jank city
                     val seconds =
                         item["date"].toString().split("seconds")[1].split(",")[0].drop(1).toLong()
+                    val cost =
+                        if (item["costCAD"].toString() == "null")
+                            gson.fromJson(item["cost"].toString(), Money::class.java)
+                        else
+                            gson.fromJson(item["costCAD"].toString(), Money::class.java)
                     _spendingData.add(
                         FirebaseOrderItem(
                             orderId = item["orderId"].toString(),
-                            costCAD = item["costCAD"].toString().toInt(),
+                            cost = cost,
                             date = Date(seconds * 1000)
                         )
                     )
