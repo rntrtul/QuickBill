@@ -79,7 +79,7 @@ class API {
                 payment = Gson().fromJson(response.body.string(), Payment::class.java)
                 Log.d("API", "Going to add to Firebase")
                 Log.d("API", payment.toString())
-//                var res = FirebaseManager.addOrderToFirebase(payment)
+                var res = FirebaseManager.addOrderToFirebase(payment)
             } catch (e: IOException) {
                 e.printStackTrace()
             }
