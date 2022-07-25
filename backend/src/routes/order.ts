@@ -69,7 +69,10 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
     };
     paymentBody.paymentIds = paymentIds;
 
-    const { result, ...httpResponse } = await ordersApi.payOrder(orderId, paymentBody);
+    const { result, ...httpResponse } = await ordersApi.payOrder(
+      orderId,
+      paymentBody
+    );
     const { statusCode, body } = httpResponse;
 
     res.status(statusCode).send(result.order);
@@ -79,43 +82,50 @@ router.post("/:orderId/pay", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/location/:locationId/table/:tableId", async (req: Request, res: Response) => {
-  const { locationId, tableId } = req.params;
-  try {
-    const bodyQueryFilterStateFilterStates: string[] = ["OPEN"];
-    const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
-      states: bodyQueryFilterStateFilterStates,
-    };
+router.get(
+  "/location/:locationId/table/:tableId/user/:userId",
+  async (req: Request, res: Response) => {
+    const { locationId, tableId, userId } = req.params;
+    try {
+      const bodyQueryFilterStateFilterStates: string[] = ["OPEN"];
+      const bodyQueryFilterStateFilter: SearchOrdersStateFilter = {
+        states: bodyQueryFilterStateFilterStates,
+      };
 
-    console.log("get bill");
-    console.log("locationId", locationId);
-    console.log("tableId", tableId);
+      console.log("==GET BILL");
+      console.log("locationId", locationId);
+      console.log("tableId", tableId);
+      console.log("userId", userId);
 
-    const bodyQueryFilter: SearchOrdersFilter = {};
-    bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
+      const bodyQueryFilter: SearchOrdersFilter = {};
+      bodyQueryFilter.stateFilter = bodyQueryFilterStateFilter;
 
-    const bodyQuery: SearchOrdersQuery = {};
-    bodyQuery.filter = bodyQueryFilter;
+      const bodyQuery: SearchOrdersQuery = {};
+      bodyQuery.filter = bodyQueryFilter;
 
-    const body: SearchOrdersRequest = {};
-    body.locationIds = [locationId];
-    body.query = bodyQuery;
+      const body: SearchOrdersRequest = {};
+      body.locationIds = [locationId];
+      body.query = bodyQuery;
 
-    const response = await ordersApi.searchOrders(body);
-    const order = response.result.orders?.find((order) => order.ticketName === tableId);
-    const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
+      const response = await ordersApi.searchOrders(body);
+      const order = response.result.orders?.find(
+        (order) => order.ticketName === tableId
+      );
+      const userOrders = await db.order.getUserOrdersByOrderId(order?.id!);
+      await db.order.addUserToOrder(order?.id!, userId);
 
-    const orderData: OrderMeta = {
-      order,
-      userOrders,
-    };
+      const orderData: OrderMeta = {
+        order,
+        userOrders,
+      };
 
-    res.status(200).send(orderData);
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
+      res.status(200).send(orderData);
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(500);
+    }
   }
-});
+);
 
 router.post("/square/update", async (req: Request, res: Response) => {
   try {
@@ -131,11 +141,15 @@ router.post("/square/update", async (req: Request, res: Response) => {
       orderId = data.object.order_id;
     }
 
-    const userOrders: UserOrder[] = await db.order.getUserOrdersByOrderId(orderId);
+    // const userOrders: UserOrder[] = await db.order.getUserOrdersByOrderId(
+    //   orderId
+    // );
+
+    const userIds: string[] = await db.order.getUsersByOrderId(orderId);
     const firebaseTokens: string[] = [];
 
-    for (const userOrder of userOrders) {
-      const user = await db.user.getUserById(userOrder.userId);
+    for (const userId of userIds) {
+      const user = await db.user.getUserById(userId);
       console.log("user", user);
       if (user.firebaseMessagingToken) {
         firebaseTokens.push(user.firebaseMessagingToken);

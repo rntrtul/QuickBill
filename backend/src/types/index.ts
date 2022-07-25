@@ -14,7 +14,8 @@ export interface UserOrder {
 }
 
 export interface FirebaseOrder {
-  userOrders: UserOrder[];
+  userOrders?: UserOrder[];
+  userIds?: string[];
 }
 
 export interface OrderMeta {
